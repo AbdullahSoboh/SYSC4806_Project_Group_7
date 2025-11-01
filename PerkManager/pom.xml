@@ -12,7 +12,7 @@
     <artifactId>PerkManager</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>PerkManager</name>
-    <description>PerkManager</description>
+    <description>PerkManager project for SYSC4806</description>
     <url/>
     <licenses>
         <license/>
@@ -30,11 +30,35 @@
         <java.version>17</java.version>
     </properties>
     <dependencies>
+
+        <!--
+            PURPOSE: Needed for all API controllers (@RestController, @GetMapping, @PostMapping)
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!--
+            PURPOSE: Needed for all database entities (@Entity) and repositories (JpaRepository)
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!--
+            PURPOSE: The in-memory database for M1.
+        -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope> <!-- 'runtime' scope means it's only needed when the app runs, not for compiling -->
+        </dependency>
+
+        <!--
+            PURPOSE: Needed for all unit and integration tests (MockMvc, @SpringBootTest)
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

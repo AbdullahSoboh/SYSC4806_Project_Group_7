@@ -53,7 +53,6 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope> <!-- 'runtime' scope means it's only needed when the app runs, not for compiling -->
         </dependency>
 
         <!--

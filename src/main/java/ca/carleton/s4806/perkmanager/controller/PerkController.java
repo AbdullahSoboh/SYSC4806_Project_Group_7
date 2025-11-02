@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * REST controller for managing Perks.
- * <p>
+ *
  * Provides API endpoints under the "/api/perks" path.
  * Allows Cross-Origin requests for frontend integration.
  *
@@ -51,12 +51,12 @@ public class PerkController {
     /**
      * Creates a new {@link Perk}.
      *
-     * <p>Accepts a JSON request body that maps to the {@link Perk} fields.
+     * Accepts a JSON request body that maps to the {@link Perk} fields.
      * If the client omits vote counters, they are initialized to zero.
      * On success, the saved entity (including its generated {@code id}) is returned.</p>
      *
-     * <p>Example request:</p>
-     * <pre>
+     * Example request:
+     *
      * POST /api/perks
      * Content-Type: application/json
      *
@@ -68,7 +68,7 @@ public class PerkController {
      *   "location": "Ottawa, ON",
      *   "expiryDate": "2026-12-31"
      * }
-     * </pre>
+     *
      *
      * @param perk the perk data sent by the client
      * @return the persisted perk with its generated ID

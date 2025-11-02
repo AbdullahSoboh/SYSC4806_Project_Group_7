@@ -37,6 +37,7 @@ public class PerkRepositoryTest {
         perk.setMembership("Visa Card");
         perk.setUpvotes(5);
         perk.setExpiryDate(LocalDate.of(2025, 12, 31));
+        perk.setLocation("Ottawa, ON");
 
         // Save it to the database
         Perk savedPerk = perkRepository.save(perk);
@@ -58,6 +59,7 @@ public class PerkRepositoryTest {
         assertEquals("Visa Card", retrievedPerk.getMembership());
         assertEquals(5, retrievedPerk.getUpvotes());
         assertEquals(LocalDate.of(2025, 12, 31), retrievedPerk.getExpiryDate());
+        assertEquals("Ottawa, ON", retrievedPerk.getLocation());
     }
 
     /**
@@ -70,8 +72,9 @@ public class PerkRepositoryTest {
         perkRepository.deleteAll();
 
         // Create and save multiple perks
-        Perk perk1 = new Perk("Free Flight", "Free domestic flight", "Flight", "Air Miles", LocalDate.of(2025, 11, 30));
-        Perk perk2 = new Perk("Roadside Assistance", "Free towing service", "Towing", "CAA", LocalDate.of(2026, 1, 15));
+        Perk perk1 = new Perk("Free Flight", "Free domestic flight", "Flight", "Air Miles", LocalDate.of(2025, 11, 30),"Toronto, ON");
+        Perk perk2 = new Perk("Roadside Assistance", "Free towing service", "Towing", "CAA", LocalDate.of(2026, 1, 15), "Ottawa, ON");
+
 
         perkRepository.save(perk1);
         perkRepository.save(perk2);

@@ -28,15 +28,17 @@ public class Perk {
 
     private Integer upvotes; // Number of upvotes this perk has received from users
 
+    private Integer downvotes; // Number of upvotes this perk has received from users
+
+    private String location;   // Geographic location where the perk is valid (Ex. "Ottawa, ON")
+
     @Column(name = "expiry_date")
     private LocalDate expiryDate; // Expiry date of the perk
 
     /**
      * Default constructor required by JPA.
-     * Initializes upvotes to 0.
      */
     public Perk() {
-        this.upvotes = 0;
     }
 
     /**
@@ -48,13 +50,15 @@ public class Perk {
      * @param membership the membership required for this perk
      * @param expiryDate the expiry date of the perk
      */
-    public Perk(String title, String description, String product, String membership, LocalDate expiryDate) {
+    public Perk(String title, String description, String product, String membership, LocalDate expiryDate, String location) {
         this.title = title;
         this.description = description;
         this.product = product;
         this.membership = membership;
         this.upvotes = 0;
+        this.downvotes = 0;
         this.expiryDate = expiryDate;
+        this.location = location;
     }
 
     /**
@@ -166,6 +170,45 @@ public class Perk {
     }
 
     /**
+     * Gets the number of downvotes for this perk.
+     *
+     * @return the downvotes count
+     */
+    public Integer getDownvotes() {
+        return downvotes;
+    }
+
+    /**
+     * Sets the number of downvotes for this perk.
+     *
+     * @param downvotes the downvotes count to set
+     */
+    public void setDownvotes(Integer downvotes) {
+        this.downvotes = downvotes;
+    }
+
+    /**
+     * Gets the geographic location where this perk is valid.
+     * This location typically represents a city or region (Ex. "Ottawa, ON").
+     *
+     * @return the location of the perk, or null if the perk is global
+     */
+    public String getLocation() {
+        return location;
+    }
+
+    /**
+     * Sets the geographic location where this perk is valid.
+     * This should be a city or region (Ex. "Ottawa, ON"). If null,
+     * the perk may be considered applicable globally.
+     *
+     * @param location the location to set for this perk
+     */
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    /**
      * Gets the expiry date of this perk.
      *
      * @return the expiry date
@@ -182,4 +225,9 @@ public class Perk {
     public void setExpiryDate(LocalDate expiryDate) {
         this.expiryDate = expiryDate;
     }
+
+    /**
+     * Gets the overall score of the perk (upvotes minus downvotes).
+     */
+    public int getScore() { return upvotes - downvotes; }
 }

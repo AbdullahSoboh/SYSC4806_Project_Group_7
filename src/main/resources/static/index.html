@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perk Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Perk Manager</h1>
+    <div class="container">
+        <div class="left">
+            <h2> Add a New Perk here</h2>
+            <form id="new-perk-form">
+                <label for="title">Perk Name:</label>
+                <input type="text" id="title" name="title" placeholder="e.g., 10% off movies" required>
+
+                <label for="description">Description:</label>
+                <input type="text" id="description" name="description" placeholder="Short Description" required>
+
+                <label for="product">Product:</label>
+                <input type="text" id="product" name="product" placeholder="e.g., Movies" required>
+
+                <label for="membership">Membership:</label>
+                <input type="text" id="membership" name="membership" placeholder="e.g., Visa" required>
+
+                <label for="expiry_date">Expiry Date:</label>
+                <input type="date" id="expiry_date" name="expiry_date">
+
+                <button type="submit" id="submit-btn">Add Perk</button>
+            </form>
+        </div>
+        <div class="right">
+            <h2>Available Perks</h2>
+            <div id="perk-list-container"></div>
+        </div>
+    </div>
+</body>
+</html>

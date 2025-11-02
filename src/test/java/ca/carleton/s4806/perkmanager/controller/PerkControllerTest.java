@@ -65,7 +65,7 @@ public class PerkControllerTest {
      * when no perks exist in the database.
      */
     @Test
-    public void testGetAllPerksEmpty() throws Exception {
+    public void testGetPerksEmpty() throws Exception {
         mockMvc.perform(get("/api/perks"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -78,7 +78,7 @@ public class PerkControllerTest {
      * when perks do exist in the database.
      */
     @Test
-    public void testGetAllPerksExisting() throws Exception {
+    public void testGetPerksExisting() throws Exception {
         Perk perk1 = new Perk(
                 "Movie Discount",
                 "50% off general admission",

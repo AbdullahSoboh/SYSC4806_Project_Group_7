@@ -26,9 +26,9 @@ public class Perk {
 
     private String membership; // The membership required for this perk (Ex. "Visa Card", "Air Miles")
 
-    private Integer upvotes; // Number of upvotes this perk has received from users
+    private Integer upvotes = 0; // Number of upvotes this perk has received from users
 
-    private Integer downvotes; // Number of upvotes this perk has received from users
+    private Integer downvotes = 0; // Number of upvotes this perk has received from users
 
     private String location;   // Geographic location where the perk is valid (Ex. "Ottawa, ON")
 
@@ -229,5 +229,8 @@ public class Perk {
     /**
      * Gets the overall score of the perk (upvotes minus downvotes).
      */
-    public int getScore() { return upvotes - downvotes; }
-}
+    public int getScore() {
+        int up = (upvotes == null) ? 0 : upvotes;
+        int down = (downvotes == null) ? 0 : downvotes;
+        return up - down;
+    }}

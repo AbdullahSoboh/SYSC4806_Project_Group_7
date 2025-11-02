@@ -1,1 +1,11 @@
+# IntelliJ / IDEA
+.idea/
+*.iml
+*.iws
+
+# Maven
+target/
+
+# OS cruft
 .DS_Store
+Thumbs.db

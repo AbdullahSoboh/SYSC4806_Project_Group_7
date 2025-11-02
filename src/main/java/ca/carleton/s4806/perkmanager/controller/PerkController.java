@@ -78,6 +78,8 @@ public class PerkController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED) // 201
     public Perk createPerk(@RequestBody Perk perk) {
+        // Force INSERT semantics even if the client sends an id
+        perk.setId(null);
         // ensure counters default to 0 if omitted by client
         if (perk.getUpvotes() == null) perk.setUpvotes(0);
         if (perk.getDownvotes() == null) perk.setDownvotes(0);

@@ -1,7 +1,9 @@
 package ca.carleton.s4806.perkmanager.controller;
 
+
 import ca.carleton.s4806.perkmanager.model.Perk;
 import ca.carleton.s4806.perkmanager.repository.PerkRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import java.time.LocalDate;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post; // NEW
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -37,6 +40,9 @@ public class PerkControllerTest {
 
     @Autowired
     private PerkRepository perkRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @AfterEach
     public void tearDown() {
@@ -97,5 +103,69 @@ public class PerkControllerTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].title", is("Movie Discount")))
                 .andExpect(jsonPath("$[0].product", is("Movies")));
+    }
+    /**
+     * Happy path: POST /api/perks with a valid payload returns 201 Created
+     * and echoes the saved perk including a generated id.
+     */
+    @Test
+    public void testCreatePerk_CreatesAndReturns201() throws Exception {
+        Perk payload = new Perk(
+                "Test Perk",
+                "Test Desc",
+                "Pro Plan",
+                "Gold",
+                LocalDate.of(2026, 12, 31),
+                "Ottawa, ON"
+        );
+        // Intentionally leave votes null to test defaults in the controller
+        payload.setUpvotes(null);
+        payload.setDownvotes(null);
+
+        String json = objectMapper.writeValueAsString(payload);
+
+        mockMvc.perform(
+                        post("/api/perks")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(json)
+                )
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.title").value("Test Perk"))
+                .andExpect(jsonPath("$.membership").value("Gold"))
+                .andExpect(jsonPath("$.location").value("Ottawa, ON"))
+                .andExpect(jsonPath("$.expiryDate").value("2026-12-31"));
+    }
+
+    /**
+     * Verifies that if upvotes/downvotes are omitted or null, the controller
+     * initializes them to 0 before saving.
+     */
+    @Test
+    public void testCreatePerk_DefaultsVotesToZero() throws Exception {
+        Perk payload = new Perk(
+                "Votes Default",
+                "No votes provided",
+                "Any",
+                "Any",
+                LocalDate.now().plusYears(1),
+                "Ottawa, ON"
+        );
+        payload.setUpvotes(null);
+        payload.setDownvotes(null);
+
+        String json = objectMapper.writeValueAsString(payload);
+
+        mockMvc.perform(
+                        post("/api/perks")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(json)
+                )
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.upvotes").value(0))
+                .andExpect(jsonPath("$.downvotes").value(0));
     }
 }

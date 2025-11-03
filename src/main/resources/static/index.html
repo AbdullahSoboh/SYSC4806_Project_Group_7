@@ -25,8 +25,11 @@
                 <label for="membership">Membership:</label>
                 <input type="text" id="membership" name="membership" placeholder="e.g., Visa" required>
 
-                <label for="expiry_date">Expiry Date:</label>
-                <input type="date" id="expiry_date" name="expiry_date">
+                <label for="location">Location (optional):</label>
+                <input type="text" id="location" name="location" placeholder="e.g., Ottawa; leave empty for Global">
+
+                <label for="expiryDate">Expiry Date (optional):</label>
+                <input type="date" id="expiryDate" name="expiryDate">
 
                 <button type="submit" id="submit-btn">Add Perk</button>
             </form>
@@ -36,5 +39,6 @@
             <div id="perk-list-container"></div>
         </div>
     </div>
+    <script src="app.js"></script>
 </body>
 </html>

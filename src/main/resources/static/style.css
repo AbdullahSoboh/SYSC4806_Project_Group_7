@@ -67,3 +67,6 @@ button:hover {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   min-height: 200px; /* shows even if empty */
 }
+
+.perk-item { padding: 6px 0; }
+hr { border: 0; border-top: 1px solid #eee; margin: 8px 0; }

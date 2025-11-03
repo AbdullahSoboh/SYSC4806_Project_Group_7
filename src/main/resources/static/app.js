@@ -17,6 +17,7 @@ async function fetchAndRenderPerks() {
                 <strong>${perk.title ?? ""}</strong><br>
                         ${perk.description ?? ""}<br>
                         ${perk.product ?? ""} • ${perk.membership ?? ""}<br>
+                        <small>Location: ${perk.location?.trim() || 'Global'}</small><br>
                         <small>Expiry: ${perk.expiryDate ?? perk.expiry_date ?? "No expiry"}</small>
             </div>
         `).join('');
@@ -37,6 +38,7 @@ async function addPerk(e) {
     description: document.getElementById('description').value,
     product: document.getElementById('product').value,
     membership: document.getElementById('membership').value,
+    location: document.getElementById('location').value.trim() || null,
     expiryDate: document.getElementById('expiryDate').value || null,
   };
 

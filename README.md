@@ -35,6 +35,12 @@ src/main/resources/static/
 Then open http://localhost:8080/
 in your browser.
 
+## CI Status
+
+[![Java CI with Maven]
+(https://github.com/AbdullahSoboh/SYSC4806_Project_Group_7/actions/workflows/maven.yml/badge.svg)]
+(https://github.com/AbdullahSoboh/SYSC4806_Project_Group_7/actions/workflows/maven.yml)
+
 ## Configuration
 
 Located in src/main/resources/application.properties

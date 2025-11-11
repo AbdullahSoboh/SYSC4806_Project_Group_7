@@ -54,17 +54,17 @@ public class MembershipRepositoryTest {
      */
     @Test
     public void testFindAll() {
-        // Clear any existing data
-        membershipRepository.deleteAll();
+        // Get initial count
+        long initialCount = membershipRepository.count();
 
         // Create and save multiple memberships
-        Membership membership1 = new Membership("Air Miles");
-        Membership membership2 = new Membership("CAA");
+        Membership membership1 = new Membership("Air Miles Test");
+        Membership membership2 = new Membership("CAA Test");
 
         membershipRepository.save(membership1);
         membershipRepository.save(membership2);
 
-        // Verify that findAll returns both memberships
-        assertEquals(2, membershipRepository.findAll().size());
+        // Verify that we added 2 memberships
+        assertEquals(initialCount + 2, membershipRepository.findAll().size());
     }
 }

@@ -8,7 +8,7 @@ import java.time.LocalDate;
  * A perk is a discount or benefit associated with a specific membership and product.
  *
  * @author Moesa Malik
- * @version 1.0
+ * @version 2.0
  */
 @Entity
 public class Perk {
@@ -22,15 +22,17 @@ public class Perk {
     @Column(length = 1000)
     private String description; // Detailed description of the perk
 
-    private String product; // The product this perk applies to (Ex. "Movie Tickets", "Flight")
+    private String product; // The product this perk applies to (e.g., "Movie Tickets", "Flight")
 
-    private String membership; // The membership required for this perk (Ex. "Visa Card", "Air Miles")
+    @ManyToOne
+    @JoinColumn(name = "membership_id")
+    private Membership membership; // The membership required for this perk (relationship to Membership entity)
 
     private Integer upvotes = 0; // Number of upvotes this perk has received from users
 
-    private Integer downvotes = 0; // Number of upvotes this perk has received from users
+    private Integer downvotes = 0; // Number of downvotes this perk has received from users
 
-    private String location;   // Geographic location where the perk is valid (Ex. "Ottawa, ON")
+    private String location; // Geographic location where the perk is valid (e.g., "Ottawa, ON")
 
     @Column(name = "expiry_date")
     private LocalDate expiryDate; // Expiry date of the perk
@@ -47,16 +49,15 @@ public class Perk {
      * @param title the title of the perk
      * @param description the description of the perk
      * @param product the product this perk applies to
-     * @param membership the membership required for this perk
+     * @param membership the membership entity required for this perk
      * @param expiryDate the expiry date of the perk
+     * @param location the geographic location where the perk is valid
      */
-    public Perk(String title, String description, String product, String membership, LocalDate expiryDate, String location) {
+    public Perk(String title, String description, String product, Membership membership, LocalDate expiryDate, String location) {
         this.title = title;
         this.description = description;
         this.product = product;
         this.membership = membership;
-        this.upvotes = 0;
-        this.downvotes = 0;
         this.expiryDate = expiryDate;
         this.location = location;
     }
@@ -136,18 +137,18 @@ public class Perk {
     /**
      * Gets the membership required for this perk.
      *
-     * @return the membership name
+     * @return the membership entity
      */
-    public String getMembership() {
+    public Membership getMembership() {
         return membership;
     }
 
     /**
      * Sets the membership required for this perk.
      *
-     * @param membership the membership name to set
+     * @param membership the membership entity to set
      */
-    public void setMembership(String membership) {
+    public void setMembership(Membership membership) {
         this.membership = membership;
     }
 
@@ -228,9 +229,11 @@ public class Perk {
 
     /**
      * Gets the overall score of the perk (upvotes minus downvotes).
+     * @return the score
      */
     public int getScore() {
         int up = (upvotes == null) ? 0 : upvotes;
         int down = (downvotes == null) ? 0 : downvotes;
         return up - down;
-    }}
+    }
+}

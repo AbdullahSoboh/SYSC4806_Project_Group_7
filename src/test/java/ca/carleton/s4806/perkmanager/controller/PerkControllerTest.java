@@ -1,10 +1,13 @@
 package ca.carleton.s4806.perkmanager.controller;
 
 
+import ca.carleton.s4806.perkmanager.model.Membership;
 import ca.carleton.s4806.perkmanager.model.Perk;
+import ca.carleton.s4806.perkmanager.repository.MembershipRepository;
 import ca.carleton.s4806.perkmanager.repository.PerkRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,7 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post; // NEW
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,8 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * and @AutoConfigureMockMvc to set up a MockMvc instance for sending
  * requests to the controller without a running server.
  *
- * @author Tommy Csete
- * @version 1.0
+ * @author Tommy Csete, Imann Brar
+ * @version 3.0
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -44,11 +47,23 @@ public class PerkControllerTest {
     private PerkRepository perkRepository;
 
     @Autowired
+    private MembershipRepository membershipRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
+
+    private Membership testMembership;
+
+    @BeforeEach
+    public void setUp() {
+        // Create a test membership that can be reused across tests
+        testMembership = membershipRepository.save(new Membership("Visa"));
+    }
 
     @AfterEach
     public void tearDown() {
         perkRepository.deleteAll();
+        membershipRepository.deleteAll();
     }
 
     /**
@@ -74,6 +89,7 @@ public class PerkControllerTest {
      */
     @Test
     public void testGetPerksEmpty() throws Exception {
+        perkRepository.deleteAll(); // Ensure empty
         mockMvc.perform(get("/api/perks"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -91,7 +107,7 @@ public class PerkControllerTest {
                 "Movie Discount",
                 "50% off general admission",
                 "Movies",
-                "Visa",
+                testMembership,
                 LocalDate.now().plusYears(1),
                 "Ottawa, ON"
         );
@@ -106,17 +122,20 @@ public class PerkControllerTest {
                 .andExpect(jsonPath("$[0].title", is("Movie Discount")))
                 .andExpect(jsonPath("$[0].product", is("Movies")));
     }
+
     /**
      * Happy path: POST /api/perks with a valid payload returns 201 Created
      * and echoes the saved perk including a generated id.
      */
     @Test
     public void testCreatePerk_CreatesAndReturns201() throws Exception {
+        Membership gold = membershipRepository.save(new Membership("Gold"));
+
         Perk payload = new Perk(
                 "Test Perk",
                 "Test Desc",
                 "Pro Plan",
-                "Gold",
+                gold,
                 LocalDate.of(2026, 12, 31),
                 "Ottawa, ON"
         );
@@ -136,7 +155,7 @@ public class PerkControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value("Test Perk"))
-                .andExpect(jsonPath("$.membership").value("Gold"))
+                .andExpect(jsonPath("$.membership.name").value("Gold"))
                 .andExpect(jsonPath("$.location").value("Ottawa, ON"))
                 .andExpect(jsonPath("$.expiryDate").value("2026-12-31"));
     }
@@ -147,11 +166,13 @@ public class PerkControllerTest {
      */
     @Test
     public void testCreatePerk_DefaultsVotesToZero() throws Exception {
+        Membership any = membershipRepository.save(new Membership("Any"));
+
         Perk payload = new Perk(
                 "Votes Default",
                 "No votes provided",
                 "Any",
-                "Any",
+                any,
                 LocalDate.now().plusYears(1),
                 "Ottawa, ON"
         );
@@ -170,6 +191,7 @@ public class PerkControllerTest {
                 .andExpect(jsonPath("$.upvotes").value(0))
                 .andExpect(jsonPath("$.downvotes").value(0));
     }
+
     /**
      * Round-trip verification for create + read.
      *
@@ -188,15 +210,17 @@ public class PerkControllerTest {
      *
      *
      * @author Imann Brar
-     * @version 1.0
+     * @version 2.0
      */
     @Test
     public void testCreatePerk_ThenGetPerksContainsNewItem() throws Exception {
+        Membership any = membershipRepository.save(new Membership("Any"));
+
         Perk payload = new Perk(
                 "Round Trip",
                 "Persist then fetch",
                 "Any",
-                "Any",
+                any,
                 LocalDate.of(2027, 1, 1),
                 "Ottawa, ON"
         );
@@ -244,15 +268,17 @@ public class PerkControllerTest {
      * enforces the domain rule that identifiers are owned by the persistence layer.
      *
      * @author Imann Brar
-     * @version 1.0
+     * @version 2.0
      */
     @Test
     public void testCreatePerk_IgnoresClientProvidedId() throws Exception {
+        Membership any = membershipRepository.save(new Membership("Any"));
+
         Perk payload = new Perk(
                 "Client Id Ignored",
                 "Server must generate id",
                 "Any",
-                "Any",
+                any,
                 LocalDate.now().plusYears(1),
                 "Ottawa, ON"
         );

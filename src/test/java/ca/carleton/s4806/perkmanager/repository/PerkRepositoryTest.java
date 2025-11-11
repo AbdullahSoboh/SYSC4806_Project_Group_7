@@ -4,8 +4,10 @@ import ca.carleton.s4806.perkmanager.model.Perk;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,5 +83,49 @@ public class PerkRepositoryTest {
 
         // Verify that findAll returns both perks
         assertEquals(2, perkRepository.findAll().size());
+    }
+
+    @Test
+    public void testSearchByTitleOrProduct() {
+        perkRepository.deleteAll();
+
+        Perk movieTitle = new Perk("Movie Night", "Discounted tickets", "Movies", "Visa", LocalDate.now().plusDays(30), "Ottawa, ON");
+        Perk productMatch = new Perk("Summer Blockbuster", "Best seats", "Movie Tickets", "Mastercard", LocalDate.now().plusDays(60), "Toronto, ON");
+        Perk nonMatch = new Perk("Grocery Deal", "Weekly savings", "Groceries", "Costco", LocalDate.now().plusDays(15), "Montreal, QC");
+
+        perkRepository.save(movieTitle);
+        perkRepository.save(productMatch);
+        perkRepository.save(nonMatch);
+
+        List<Perk> results = perkRepository
+                .findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase("movie", "movie");
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().anyMatch(perk -> perk.getTitle().equals("Movie Night")));
+        assertTrue(results.stream().anyMatch(perk -> perk.getTitle().equals("Summer Blockbuster")));
+    }
+
+    @Test
+    public void testSearchWithSorting() {
+        perkRepository.deleteAll();
+
+        Perk lowVotes = new Perk("Movie Discount", "Save big", "Movies", "Visa", LocalDate.now().plusDays(30), "Ottawa, ON");
+        lowVotes.setUpvotes(1);
+        Perk highVotes = new Perk("Cinema Deal", "Even bigger savings", "Movies", "Visa", LocalDate.now().plusDays(30), "Ottawa, ON");
+        highVotes.setUpvotes(5);
+
+        perkRepository.save(lowVotes);
+        perkRepository.save(highVotes);
+
+        List<Perk> results = perkRepository
+                .findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
+                        "movie",
+                        "movie",
+                        Sort.by(Sort.Direction.DESC, "upvotes")
+                );
+
+        assertEquals(2, results.size());
+        assertEquals("Cinema Deal", results.get(0).getTitle());
+        assertEquals("Movie Discount", results.get(1).getTitle());
     }
 }

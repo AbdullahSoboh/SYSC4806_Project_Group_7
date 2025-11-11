@@ -13,11 +13,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post; // NEW
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -221,6 +223,41 @@ public class PerkControllerTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].title", is("Round Trip")))
                 .andExpect(jsonPath("$[0].location", is("Ottawa, ON")));
+    }
+
+    @Test
+    public void testGetPerksSearchFiltersResults() throws Exception {
+        Perk matchTitle = new Perk("Movie Night", "Snacks", "Cinema", "Visa", LocalDate.now().plusMonths(2), "Ottawa, ON");
+        Perk matchProduct = new Perk("Snacks Promo", "Discount", "Movie Tickets", "MC", LocalDate.now().plusMonths(3), "Toronto, ON");
+        Perk other = new Perk("Grocery Deal", "Food", "Groceries", "Costco", LocalDate.now().plusMonths(1), "Montreal, QC");
+
+        perkRepository.saveAll(List.of(matchTitle, matchProduct, other));
+
+        mockMvc.perform(get("/api/perks")
+                        .param("search", "movie")
+                        .param("sortBy", "title"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].title", containsInAnyOrder("Movie Night", "Snacks Promo")));
+    }
+
+    @Test
+    public void testGetPerksSortsResults() throws Exception {
+        Perk lowVotes = new Perk("Low Votes", "desc", "Movies", "Visa", LocalDate.now().plusMonths(1), "Ottawa, ON");
+        lowVotes.setUpvotes(1);
+        Perk highVotes = new Perk("High Votes", "desc", "Movies", "Visa", LocalDate.now().plusMonths(1), "Ottawa, ON");
+        highVotes.setUpvotes(5);
+
+        perkRepository.saveAll(List.of(lowVotes, highVotes));
+
+        mockMvc.perform(get("/api/perks")
+                        .param("sortBy", "upvotes")
+                        .param("direction", "desc"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title", is("High Votes")))
+                .andExpect(jsonPath("$[1].title", is("Low Votes")));
     }
 
     /**

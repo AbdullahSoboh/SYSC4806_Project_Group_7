@@ -7,8 +7,8 @@ import java.time.LocalDate;
  * Represents a Perk entity in the Perk Manager application.
  * A perk is a discount or benefit associated with a specific membership and product.
  *
- * @author Moesa Malik
- * @version 1.0
+ * @author Moesa Malik, Imann Brar
+ * @version 1.2
  */
 @Entity
 public class Perk {
@@ -28,7 +28,15 @@ public class Perk {
 
     private Integer upvotes = 0; // Number of upvotes this perk has received from users
 
-    private Integer downvotes = 0; // Number of upvotes this perk has received from users
+    private Integer downvotes = 0; // Number of downvotes this perk has received from users
+
+    /**
+     * Aggregated vote counter for simple +/- voting use-cases.
+     * Initialized to 0 and persisted by JPA.
+     * (This does NOT replace upvotes/downvotes; it’s an additional field.)
+     */
+    @Column(nullable = false)
+    private int votes = 0;
 
     private String location;   // Geographic location where the perk is valid (Ex. "Ottawa, ON")
 
@@ -49,6 +57,7 @@ public class Perk {
      * @param product the product this perk applies to
      * @param membership the membership required for this perk
      * @param expiryDate the expiry date of the perk
+     * @param location the location where this perk is valid
      */
     public Perk(String title, String description, String product, String membership, LocalDate expiryDate, String location) {
         this.title = title;
@@ -57,134 +66,89 @@ public class Perk {
         this.membership = membership;
         this.upvotes = 0;
         this.downvotes = 0;
+        this.votes = 0;
         this.expiryDate = expiryDate;
         this.location = location;
     }
 
-    /**
-     * Gets the unique identifier of this perk.
-     *
-     * @return the perk ID
-     */
+    /** Gets the unique identifier of this perk. */
     public Long getId() {
         return id;
     }
 
-    /**
-     * Sets the unique identifier of this perk.
-     *
-     * @param id the perk ID to set
-     */
+    /** Sets the unique identifier of this perk. */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * Gets the title of this perk.
-     *
-     * @return the perk title
-     */
+    /** Gets the title of this perk. */
     public String getTitle() {
         return title;
     }
 
-    /**
-     * Sets the title of this perk.
-     *
-     * @param title the perk title to set
-     */
+    /** Sets the title of this perk. */
     public void setTitle(String title) {
         this.title = title;
     }
 
-    /**
-     * Gets the description of this perk.
-     *
-     * @return the perk description
-     */
+    /** Gets the description of this perk. */
     public String getDescription() {
         return description;
     }
 
-    /**
-     * Sets the description of this perk.
-     *
-     * @param description the perk description to set
-     */
+    /** Sets the description of this perk. */
     public void setDescription(String description) {
         this.description = description;
     }
 
-    /**
-     * Gets the product this perk applies to.
-     *
-     * @return the product name
-     */
+    /** Gets the product this perk applies to. */
     public String getProduct() {
         return product;
     }
 
-    /**
-     * Sets the product this perk applies to.
-     *
-     * @param product the product name to set
-     */
+    /** Sets the product this perk applies to. */
     public void setProduct(String product) {
         this.product = product;
     }
 
-    /**
-     * Gets the membership required for this perk.
-     *
-     * @return the membership name
-     */
+    /** Gets the membership required for this perk. */
     public String getMembership() {
         return membership;
     }
 
-    /**
-     * Sets the membership required for this perk.
-     *
-     * @param membership the membership name to set
-     */
+    /** Sets the membership required for this perk. */
     public void setMembership(String membership) {
         this.membership = membership;
     }
 
-    /**
-     * Gets the number of upvotes for this perk.
-     *
-     * @return the upvote count
-     */
+    /** Gets the number of upvotes for this perk. */
     public Integer getUpvotes() {
         return upvotes;
     }
 
-    /**
-     * Sets the number of upvotes for this perk.
-     *
-     * @param upvotes the upvote count to set
-     */
+    /** Sets the number of upvotes for this perk. */
     public void setUpvotes(Integer upvotes) {
         this.upvotes = upvotes;
     }
 
-    /**
-     * Gets the number of downvotes for this perk.
-     *
-     * @return the downvotes count
-     */
+    /** Gets the number of downvotes for this perk. */
     public Integer getDownvotes() {
         return downvotes;
     }
 
-    /**
-     * Sets the number of downvotes for this perk.
-     *
-     * @param downvotes the downvotes count to set
-     */
+    /** Sets the number of downvotes for this perk. */
     public void setDownvotes(Integer downvotes) {
         this.downvotes = downvotes;
+    }
+
+    /** Gets the aggregated votes counter. */
+    public int getVotes() {
+        return votes;
+    }
+
+    /** Sets the aggregated votes counter. */
+    public void setVotes(int votes) {
+        this.votes = votes;
     }
 
     /**
@@ -201,36 +165,28 @@ public class Perk {
      * Sets the geographic location where this perk is valid.
      * This should be a city or region (Ex. "Ottawa, ON"). If null,
      * the perk may be considered applicable globally.
-     *
-     * @param location the location to set for this perk
      */
     public void setLocation(String location) {
         this.location = location;
     }
 
-    /**
-     * Gets the expiry date of this perk.
-     *
-     * @return the expiry date
-     */
+    /** Gets the expiry date of this perk. */
     public LocalDate getExpiryDate() {
         return expiryDate;
     }
 
-    /**
-     * Sets the expiry date of this perk.
-     *
-     * @param expiryDate the expiry date to set
-     */
+    /** Sets the expiry date of this perk. */
     public void setExpiryDate(LocalDate expiryDate) {
         this.expiryDate = expiryDate;
     }
 
     /**
      * Gets the overall score of the perk (upvotes minus downvotes).
+     * (Unchanged behavior; independent of the new `votes` field.)
      */
     public int getScore() {
         int up = (upvotes == null) ? 0 : upvotes;
         int down = (downvotes == null) ? 0 : downvotes;
         return up - down;
-    }}
+    }
+}

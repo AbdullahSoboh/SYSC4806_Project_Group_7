@@ -122,7 +122,8 @@ public class PerkControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].title", is("Movie Discount")))
-                .andExpect(jsonPath("$[0].product", is("Movies")));
+                .andExpect(jsonPath("$[0].product", is("Movies")))
+                .andExpect(jsonPath("$[0].membership.name", is("Visa")));
     }
 
     /**
@@ -251,9 +252,13 @@ public class PerkControllerTest {
 
     @Test
     public void testGetPerksSearchFiltersResults() throws Exception {
-        Perk matchTitle = new Perk("Movie Night", "Snacks", "Cinema", "Visa", LocalDate.now().plusMonths(2), "Ottawa, ON");
-        Perk matchProduct = new Perk("Snacks Promo", "Discount", "Movie Tickets", "MC", LocalDate.now().plusMonths(3), "Toronto, ON");
-        Perk other = new Perk("Grocery Deal", "Food", "Groceries", "Costco", LocalDate.now().plusMonths(1), "Montreal, QC");
+        Membership visa = testMembership;
+        Membership mc = membershipRepository.save(new Membership("MC"));
+        Membership costco = membershipRepository.save(new Membership("Costco"));
+
+        Perk matchTitle = new Perk("Movie Night", "Snacks", "Cinema", visa, LocalDate.now().plusMonths(2), "Ottawa, ON");
+        Perk matchProduct = new Perk("Snacks Promo", "Discount", "Movie Tickets", mc, LocalDate.now().plusMonths(3), "Toronto, ON");
+        Perk other = new Perk("Grocery Deal", "Food", "Groceries", costco, LocalDate.now().plusMonths(1), "Montreal, QC");
 
         perkRepository.saveAll(List.of(matchTitle, matchProduct, other));
 
@@ -268,9 +273,9 @@ public class PerkControllerTest {
 
     @Test
     public void testGetPerksSortsResults() throws Exception {
-        Perk lowVotes = new Perk("Low Votes", "desc", "Movies", "Visa", LocalDate.now().plusMonths(1), "Ottawa, ON");
+        Perk lowVotes = new Perk("Low Votes", "desc", "Movies", testMembership, LocalDate.now().plusMonths(1), "Ottawa, ON");
         lowVotes.setUpvotes(1);
-        Perk highVotes = new Perk("High Votes", "desc", "Movies", "Visa", LocalDate.now().plusMonths(1), "Ottawa, ON");
+        Perk highVotes = new Perk("High Votes", "desc", "Movies", testMembership, LocalDate.now().plusMonths(1), "Ottawa, ON");
         highVotes.setUpvotes(5);
 
         perkRepository.saveAll(List.of(lowVotes, highVotes));

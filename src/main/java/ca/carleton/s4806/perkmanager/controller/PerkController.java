@@ -31,15 +31,17 @@ import java.util.Map;
 @RequestMapping("/api/perks")
 public class PerkController {
 
-    private static final Map<String, String> SORTABLE_FIELDS = Map.of(
-            "id", "id",
-            "title", "title",
-            "product", "product",
-            "membership", "membership",
-            "upvotes", "upvotes",
-            "downvotes", "downvotes",
-            "expirydate", "expiryDate",
-            "location", "location"
+    private static final Map<String, String> SORTABLE_FIELDS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("title", "title"),
+            Map.entry("product", "product"),
+            Map.entry("membership", "membership.name"),
+            Map.entry("membership.name", "membership.name"),
+            Map.entry("membershipname", "membership.name"),
+            Map.entry("upvotes", "upvotes"),
+            Map.entry("downvotes", "downvotes"),
+            Map.entry("expirydate", "expiryDate"),
+            Map.entry("location", "location")
     );
 
     private final PerkRepository perkRepository; // Repository for Perk Data operations

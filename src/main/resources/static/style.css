@@ -54,6 +54,31 @@ button:hover {
   background-color: #0056b3;
 }
 
+.membership-create {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.membership-create-row {
+  display: flex;
+  gap: 8px;
+}
+
+.membership-create-row input {
+  flex: 1;
+}
+
+.membership-create-row button {
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.hint-text {
+  color: #666;
+  font-size: 0.85rem;
+}
+
 /* Right side (list container) */
 .right {
   flex: 2;

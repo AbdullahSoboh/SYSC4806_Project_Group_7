@@ -23,7 +23,18 @@
                 <input type="text" id="product" name="product" placeholder="e.g., Movies" required>
 
                 <label for="membership">Membership:</label>
-                <input type="text" id="membership" name="membership" placeholder="e.g., Visa" required>
+                <select id="membership" name="membership" required>
+                    <option value="">Loading memberships...</option>
+                </select>
+
+                <div class="membership-create">
+                    <label for="new-membership-name">Can't find the membership?</label>
+                    <div class="membership-create-row">
+                        <input type="text" id="new-membership-name" name="new-membership-name" placeholder="New membership name">
+                        <button type="button" id="add-membership-btn">Add Membership</button>
+                    </div>
+                    <small class="hint-text">New memberships appear immediately in the dropdown.</small>
+                </div>
 
                 <label for="location">Location (optional):</label>
                 <input type="text" id="location" name="location" placeholder="e.g., Ottawa; leave empty for Global">

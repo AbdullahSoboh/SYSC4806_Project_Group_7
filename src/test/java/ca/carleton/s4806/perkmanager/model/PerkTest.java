@@ -2,6 +2,7 @@ package ca.carleton.s4806.perkmanager.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.LocalDate;
 
@@ -18,14 +19,16 @@ class PerkTest {
     @Test
     void constructorInitializesCoreFields() {
         LocalDate expiry = LocalDate.of(2025, 12, 31);
+        Membership membership = new Membership("Visa");
 
-        Perk perk = new Perk("Title", "Description", "Product", "Membership", expiry, "Ottawa");
+        Perk perk = new Perk("Title", "Description", "Product", membership, expiry, "Ottawa");
 
         assertNull(perk.getId(), "JPA-managed id should default to null before persistence");
         assertEquals("Title", perk.getTitle());
         assertEquals("Description", perk.getDescription());
         assertEquals("Product", perk.getProduct());
-        assertEquals("Membership", perk.getMembership());
+        assertNotNull(perk.getMembership());
+        assertEquals("Visa", perk.getMembership().getName());
         assertEquals("Ottawa", perk.getLocation());
         assertEquals(expiry, perk.getExpiryDate());
         assertEquals(0, perk.getUpvotes());
@@ -41,12 +44,13 @@ class PerkTest {
     void settersUpdateMutableFields() {
         Perk perk = new Perk();
         LocalDate expiry = LocalDate.of(2030, 1, 1);
+        Membership membership = new Membership("Mastercard");
 
         perk.setId(42L);
         perk.setTitle("Updated Title");
         perk.setDescription("Updated Description");
         perk.setProduct("Updated Product");
-        perk.setMembership("Updated Membership");
+        perk.setMembership(membership);
         perk.setLocation("Toronto");
         perk.setExpiryDate(expiry);
         perk.setUpvotes(7);
@@ -57,7 +61,8 @@ class PerkTest {
         assertEquals("Updated Title", perk.getTitle());
         assertEquals("Updated Description", perk.getDescription());
         assertEquals("Updated Product", perk.getProduct());
-        assertEquals("Updated Membership", perk.getMembership());
+        assertNotNull(perk.getMembership());
+        assertEquals("Mastercard", perk.getMembership().getName());
         assertEquals("Toronto", perk.getLocation());
         assertEquals(expiry, perk.getExpiryDate());
         assertEquals(7, perk.getUpvotes());

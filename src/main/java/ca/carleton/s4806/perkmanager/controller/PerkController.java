@@ -2,16 +2,19 @@ package ca.carleton.s4806.perkmanager.controller;
 
 import ca.carleton.s4806.perkmanager.model.Perk;
 import ca.carleton.s4806.perkmanager.repository.PerkRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller for managing Perks.
@@ -27,6 +30,19 @@ import java.util.List;
 @CrossOrigin
 @RequestMapping("/api/perks")
 public class PerkController {
+
+    private static final Map<String, String> SORTABLE_FIELDS = Map.ofEntries(
+            Map.entry("id", "id"),
+            Map.entry("title", "title"),
+            Map.entry("product", "product"),
+            Map.entry("membership", "membership.name"),
+            Map.entry("membership.name", "membership.name"),
+            Map.entry("membershipname", "membership.name"),
+            Map.entry("upvotes", "upvotes"),
+            Map.entry("downvotes", "downvotes"),
+            Map.entry("expirydate", "expiryDate"),
+            Map.entry("location", "location")
+    );
 
     private final PerkRepository perkRepository; // Repository for Perk Data operations
 
@@ -46,8 +62,32 @@ public class PerkController {
      * @return A List of all Perk Objects (serialized as JSON)
      */
     @GetMapping
-    public List<Perk> getAllPerks() {
-        return perkRepository.findAll();
+    public List<Perk> getAllPerks(
+            @RequestParam(value = "search", required = false) String searchKeyword,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "direction", required = false) String direction
+    ) {
+        Sort sort = resolveSort(sortBy, direction);
+        boolean hasSearch = searchKeyword != null && !searchKeyword.trim().isEmpty();
+
+        if (hasSearch) {
+            if (sort.isUnsorted()) {
+                return perkRepository.findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
+                        searchKeyword,
+                        searchKeyword
+                );
+            }
+            return perkRepository.findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
+                    searchKeyword,
+                    searchKeyword,
+                    sort
+            );
+        }
+
+        if (sort.isUnsorted()) {
+            return perkRepository.findAll();
+        }
+        return perkRepository.findAll(sort);
 
     }
     /**
@@ -84,5 +124,23 @@ public class PerkController {
         if (perk.getUpvotes() == null) perk.setUpvotes(0);
         if (perk.getDownvotes() == null) perk.setDownvotes(0);
         return perkRepository.save(perk);
+    }
+
+    private Sort resolveSort(String sortBy, String direction) {
+        if (sortBy == null || sortBy.isBlank()) {
+            return Sort.unsorted();
+        }
+        String key = sortBy.toLowerCase();
+        String property = SORTABLE_FIELDS.get(key);
+        if (property == null) {
+            return Sort.unsorted();
+        }
+
+        Sort.Direction sortDirection =
+                (direction != null && direction.equalsIgnoreCase("desc"))
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        return Sort.by(sortDirection, property);
     }
 }

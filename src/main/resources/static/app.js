@@ -144,6 +144,10 @@ async function createMembership(event) {
             body: JSON.stringify({ name })
         });
         if (!response.ok) {
+            if (response.status === 409) {
+                alert('That membership already exists.');
+                return;
+            }
             throw new Error(`Failed to create membership (status ${response.status})`);
         }
         const membership = await response.json();

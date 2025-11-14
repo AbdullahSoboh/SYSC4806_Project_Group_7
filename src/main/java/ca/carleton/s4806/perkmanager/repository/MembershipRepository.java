@@ -22,4 +22,5 @@ import org.springframework.stereotype.Repository;
 public interface MembershipRepository extends JpaRepository<Membership, Long> {
     // Custom query methods can be added here if needed, Ex.:
     // Optional<Membership> findByName(String name);
+    boolean existsByNameIgnoreCase(String name);
 }

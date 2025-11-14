@@ -53,7 +53,11 @@ public class MembershipController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Membership name is required");
         }
         membership.setId(null);
-        membership.setName(name.trim());
+        String normalizedName = name.trim();
+        if (membershipRepository.existsByNameIgnoreCase(normalizedName)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Membership already exists");
+        }
+        membership.setName(normalizedName);
         return membershipRepository.save(membership);
     }
 }

@@ -7,8 +7,8 @@ import java.time.LocalDate;
  * Represents a Perk entity in the Perk Manager application.
  * A perk is a discount or benefit associated with a specific membership and product.
  *
- * @author Moesa Malik
- * @version 2.0
+ * @author Moesa Malik, Imann Brar
+ * @version 2.1
  */
 @Entity
 public class Perk {
@@ -31,6 +31,14 @@ public class Perk {
     private Integer upvotes = 0; // Number of upvotes this perk has received from users
 
     private Integer downvotes = 0; // Number of downvotes this perk has received from users
+
+    /**
+     * Aggregated vote counter for simple +/- voting use-cases.
+     * Initialized to 0 and persisted by JPA.
+     * (This does NOT replace upvotes/downvotes; it’s an additional field.)
+     */
+    @Column(nullable = false)
+    private int votes = 0;
 
     private String location; // Geographic location where the perk is valid (e.g., "Ottawa, ON")
 
@@ -186,6 +194,24 @@ public class Perk {
      */
     public void setDownvotes(Integer downvotes) {
         this.downvotes = downvotes;
+    }
+
+    /**
+     * Gets the aggregated votes counter.
+     *
+     * @return the aggregated votes value
+     */
+    public int getVotes() {
+        return votes;
+    }
+
+    /**
+     * Sets the aggregated votes counter.
+     *
+     * @param votes the aggregated votes value to set
+     */
+    public void setVotes(int votes) {
+        this.votes = votes;
     }
 
     /**

@@ -141,7 +141,7 @@ async function createMembership(event) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name })
+            body: JSON.stringify({name})
         });
         if (!response.ok) {
             if (response.status === 409) {
@@ -195,70 +195,87 @@ async function fetchAndRenderPerks() {
 
 //Test the POST
 async function addPerk(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  const membershipSelect = getMembershipSelect();
-  const membershipId = membershipSelect?.value;
-  if (!membershipId) {
-    alert('Please select a membership.');
-    return;
-  }
-
-  const membershipName =
-    membershipSelect.options[membershipSelect.selectedIndex]?.textContent ?? null;
-  const membershipIdNumber = Number(membershipId);
-  if (Number.isNaN(membershipIdNumber)) {
-    alert('Invalid membership selection.');
-    return;
-  }
-
-  const perk = {
-    title: document.getElementById('title').value,
-    description: document.getElementById('description').value,
-    product: document.getElementById('product').value,
-    location: document.getElementById('location').value.trim() || null,
-    expiryDate: document.getElementById('expiryDate').value || null,
-    membership: {
-      id: membershipIdNumber,
-      name: membershipName
-    },
-  };
-
-  if (!perk.title || !perk.description || !perk.product || !perk.membership) {
-    alert('Please fill in all required fields.');
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/perks', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(perk)
-    });
-
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
+    const membershipSelect = getMembershipSelect();
+    const membershipId = membershipSelect?.value;
+    if (!membershipId) {
+        alert('Please select a membership.');
+        return;
     }
 
-    document.getElementById('new-perk-form').reset();
-    await fetchAndRenderPerks(); // Refresh the perk list (also refreshes memberships)
-  } catch (error) {
-    console.error('Error adding perk:', error);
-    alert('Failed to add perk.');
-  }
+    const membershipName =
+        membershipSelect.options[membershipSelect.selectedIndex]?.textContent ?? null;
+    const membershipIdNumber = Number(membershipId);
+    if (Number.isNaN(membershipIdNumber)) {
+        alert('Invalid membership selection.');
+        return;
+    }
+
+    const expiryDateValue = document.getElementById('expiryDate').value;
+
+    if (expiryDateValue) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to local midnight
+
+        // Parse YYYY-MM-DD string
+        const [year, month, day] = expiryDateValue.split('-').map(Number);
+        // Create date as local midnight (month is 0-indexed)
+        const localInputDate = new Date(year, month - 1, day);
+
+        if (localInputDate < today) {
+            alert('Expiry date cannot be in the past. Please select today or a future date.');
+            return;
+        }
+    }
+
+    const perk = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        product: document.getElementById('product').value,
+        location: document.getElementById('location').value.trim() || null,
+        expiryDate: expiryDateValue || null,
+        membership: {
+            id: membershipIdNumber,
+            name: membershipName
+        },
+    };
+
+    if (!perk.title || !perk.description || !perk.product || !perk.membership) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/perks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(perk)
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        document.getElementById('new-perk-form').reset();
+        await fetchAndRenderPerks(); // Refresh the perk list (also refreshes memberships)
+    } catch (error) {
+        console.error('Error adding perk:', error);
+        alert('Failed to add perk.');
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  fetchAndPopulateMemberships();
-  fetchAndRenderPerks();
-  const form = document.getElementById("new-perk-form");
-  if (form) {
-    form.addEventListener("submit", addPerk);
-  }
-  const addMembershipButton = document.getElementById('add-membership-btn');
-  if (addMembershipButton) {
-    addMembershipButton.addEventListener('click', createMembership);
-  }
+    fetchAndPopulateMemberships();
+    fetchAndRenderPerks();
+    const form = document.getElementById("new-perk-form");
+    if (form) {
+        form.addEventListener("submit", addPerk);
+    }
+    const addMembershipButton = document.getElementById('add-membership-btn');
+    if (addMembershipButton) {
+        addMembershipButton.addEventListener('click', createMembership);
+    }
 });

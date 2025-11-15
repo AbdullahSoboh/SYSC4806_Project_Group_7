@@ -12,13 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
  * REST controller for managing Perks.
- *
+ * <p>
  * Provides API endpoints under the "/api/perks" path.
  * Allows Cross-Origin requests for frontend integration.
  *
@@ -90,27 +92,27 @@ public class PerkController {
         return perkRepository.findAll(sort);
 
     }
+
     /**
      * Creates a new {@link Perk}.
-     *
+     * <p>
      * Accepts a JSON request body that maps to the {@link Perk} fields.
      * If the client omits vote counters, they are initialized to zero.
      * On success, the saved entity (including its generated {@code id}) is returned.</p>
-     *
+     * <p>
      * Example request:
-     *
+     * <p>
      * POST /api/perks
      * Content-Type: application/json
-     *
+     * <p>
      * {
-     *   "title": "Student Discount",
-     *   "description": "15% off with student ID",
-     *   "product": "Movie Tickets",
-     *   "membership": "University",
-     *   "location": "Ottawa, ON",
-     *   "expiryDate": "2026-12-31"
+     * "title": "Student Discount",
+     * "description": "15% off with student ID",
+     * "product": "Movie Tickets",
+     * "membership": "University",
+     * "location": "Ottawa, ON",
+     * "expiryDate": "2026-12-31"
      * }
-     *
      *
      * @param perk the perk data sent by the client
      * @return the persisted perk with its generated ID
@@ -123,6 +125,16 @@ public class PerkController {
         // ensure counters default to 0 if omitted by client
         if (perk.getUpvotes() == null) perk.setUpvotes(0);
         if (perk.getDownvotes() == null) perk.setDownvotes(0);
+
+        if (perk.getExpiryDate() != null) {
+            LocalDate today = LocalDate.now();
+            if (perk.getExpiryDate().isBefore(today)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Expiry date cannot be in the past."
+                );
+            }
+        }
         return perkRepository.save(perk);
     }
 

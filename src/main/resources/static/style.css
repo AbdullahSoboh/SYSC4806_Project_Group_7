@@ -156,3 +156,13 @@ hr {
 .downvote-btn {
     color: blue;
 }
+
+.delete-btn {
+    color: #d9534f; /* A standard 'danger' red */
+    font-size: 1.2rem;
+}
+
+.delete-btn:hover {
+    color: #c9302c; /* A darker red on hover */
+    background-color: #f0f0f0;
+}

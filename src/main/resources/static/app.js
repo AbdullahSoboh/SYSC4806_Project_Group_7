@@ -280,7 +280,7 @@ async function addPerk(e) {
         description: document.getElementById('description').value,
         product: document.getElementById('product').value,
         location: document.getElementById('location').value.trim() || null,
-        expiryDate: document.getElementById('expiryDate').value || null,
+        expiryDate: expiryDateValue || null,
         membership: {
             id: membershipIdNumber,
             name: membershipName

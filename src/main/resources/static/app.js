@@ -1,3 +1,166 @@
+function getMembershipSelect() {
+    return document.getElementById('membership');
+}
+
+function setMembershipSelectMessage(message) {
+    const select = getMembershipSelect();
+    if (!select) {
+        return;
+    }
+    select.innerHTML = '';
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = message;
+    option.disabled = true;
+    option.selected = true;
+    option.defaultSelected = true;
+    select.appendChild(option);
+    select.disabled = true;
+}
+
+function populateMembershipSelect(memberships, preferredId = null) {
+    const select = getMembershipSelect();
+    if (!select) {
+        return;
+    }
+
+    if (!Array.isArray(memberships) || memberships.length === 0) {
+        setMembershipSelectMessage('No memberships available');
+        return;
+    }
+
+    const previousValue = select.value;
+    const desiredValue =
+        preferredId !== null && preferredId !== undefined
+            ? String(preferredId)
+            : previousValue;
+    select.innerHTML = '';
+    select.disabled = false;
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select membership';
+    placeholder.disabled = true;
+    select.appendChild(placeholder);
+
+    memberships
+        .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+        .forEach((membership) => {
+            const option = document.createElement('option');
+            option.value = String(membership.id);
+            option.textContent = membership.name ?? `Membership #${membership.id}`;
+            select.appendChild(option);
+        });
+
+    const hasDesiredSelection = memberships.some(
+        (membership) => String(membership.id) === desiredValue
+    );
+    placeholder.selected = !hasDesiredSelection;
+    placeholder.defaultSelected = !hasDesiredSelection;
+    if (hasDesiredSelection) {
+        select.value = desiredValue;
+    } else {
+        select.value = '';
+    }
+}
+
+function deriveMembershipsFromPerks(perks) {
+    if (!Array.isArray(perks)) {
+        return [];
+    }
+    const map = new Map();
+    perks.forEach((perk) => {
+        const membership = perk?.membership;
+        if (membership?.id && !map.has(membership.id)) {
+            map.set(membership.id, {
+                id: membership.id,
+                name: membership.name ?? `Membership #${membership.id}`
+            });
+        }
+    });
+    return Array.from(map.values());
+}
+
+async function populateMembershipsFromPerks(preferredId = null) {
+    try {
+        const response = await fetch('/api/perks');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const perks = await response.json();
+        const memberships = deriveMembershipsFromPerks(perks);
+        if (memberships.length === 0) {
+            setMembershipSelectMessage('No memberships available');
+            return;
+        }
+        populateMembershipSelect(memberships, preferredId);
+    } catch (fallbackError) {
+        console.error('Fallback membership load failed:', fallbackError);
+        setMembershipSelectMessage('Unable to load memberships');
+    }
+}
+
+async function fetchAndPopulateMemberships(preferredId = null) {
+    setMembershipSelectMessage('Loading memberships...');
+    try {
+        const response = await fetch('/api/memberships');
+        if (!response.ok) {
+            throw new Error(`Membership fetch failed with status ${response.status}`);
+        }
+        const memberships = await response.json();
+        if (Array.isArray(memberships) && memberships.length > 0) {
+            populateMembershipSelect(memberships, preferredId);
+            return;
+        }
+        console.warn('Membership endpoint returned no data; falling back to perks');
+        await populateMembershipsFromPerks(preferredId);
+    } catch (error) {
+        console.error('Error fetching memberships:', error);
+        await populateMembershipsFromPerks(preferredId);
+    }
+}
+
+async function createMembership(event) {
+    event.preventDefault();
+    const input = document.getElementById('new-membership-name');
+    const button = document.getElementById('add-membership-btn');
+    if (!input || !button) {
+        return;
+    }
+
+    const name = input.value.trim();
+    if (!name) {
+        alert('Please enter a membership name.');
+        return;
+    }
+
+    button.disabled = true;
+    try {
+        const response = await fetch('/api/memberships', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name })
+        });
+        if (!response.ok) {
+            if (response.status === 409) {
+                alert('That membership already exists.');
+                return;
+            }
+            throw new Error(`Failed to create membership (status ${response.status})`);
+        }
+        const membership = await response.json();
+        input.value = '';
+        await fetchAndPopulateMemberships(membership?.id ?? null);
+    } catch (error) {
+        console.error('Error creating membership:', error);
+        alert('Failed to create membership.');
+    } finally {
+        button.disabled = false;
+    }
+}
+
 async function fetchAndRenderPerks() {
     const perkListContainer = document.getElementById('perk-list-container');
     perkListContainer.textContent = 'Loading perks...';
@@ -7,6 +170,7 @@ async function fetchAndRenderPerks() {
             throw new Error('Network response was not ok');
         }
         const perks = await response.json(); // parse JSON format
+
         if (!Array.isArray(perks) || perks.length === 0) {
             perkListContainer.textContent = 'No perks available.';
             return;
@@ -16,7 +180,7 @@ async function fetchAndRenderPerks() {
             <div class="perk-item">
                 <strong>${perk.title ?? ""}</strong><br>
                         ${perk.description ?? ""}<br>
-                        ${perk.product ?? ""} • ${perk.membership ?? ""}<br>
+                        ${perk.product ?? ""} • ${perk.membership?.name ?? ""}<br>
                         <small>Location: ${perk.location?.trim() || 'Global'}</small><br>
                         <small>Expiry: ${perk.expiryDate ?? perk.expiry_date ?? "No expiry"}</small>
             </div>
@@ -25,21 +189,39 @@ async function fetchAndRenderPerks() {
     } catch (error) {
         perkListContainer.textContent = 'Failed to load perks.';
         console.error('Error fetching perks:', error);
+        setMembershipSelectMessage('Unable to load memberships');
     }
 }
-document.addEventListener("DOMContentLoaded", fetchAndRenderPerks);
 
 //Test the POST
 async function addPerk(e) {
   e.preventDefault();
 
+  const membershipSelect = getMembershipSelect();
+  const membershipId = membershipSelect?.value;
+  if (!membershipId) {
+    alert('Please select a membership.');
+    return;
+  }
+
+  const membershipName =
+    membershipSelect.options[membershipSelect.selectedIndex]?.textContent ?? null;
+  const membershipIdNumber = Number(membershipId);
+  if (Number.isNaN(membershipIdNumber)) {
+    alert('Invalid membership selection.');
+    return;
+  }
+
   const perk = {
     title: document.getElementById('title').value,
     description: document.getElementById('description').value,
     product: document.getElementById('product').value,
-    membership: document.getElementById('membership').value,
     location: document.getElementById('location').value.trim() || null,
     expiryDate: document.getElementById('expiryDate').value || null,
+    membership: {
+      id: membershipIdNumber,
+      name: membershipName
+    },
   };
 
   if (!perk.title || !perk.description || !perk.product || !perk.membership) {
@@ -61,7 +243,7 @@ async function addPerk(e) {
     }
 
     document.getElementById('new-perk-form').reset();
-    await fetchAndRenderPerks(); // Refresh the perk list
+    await fetchAndRenderPerks(); // Refresh the perk list (also refreshes memberships)
   } catch (error) {
     console.error('Error adding perk:', error);
     alert('Failed to add perk.');
@@ -69,7 +251,14 @@ async function addPerk(e) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  fetchAndPopulateMemberships();
+  fetchAndRenderPerks();
   const form = document.getElementById("new-perk-form");
-  form.addEventListener("submit", addPerk);
+  if (form) {
+    form.addEventListener("submit", addPerk);
+  }
+  const addMembershipButton = document.getElementById('add-membership-btn');
+  if (addMembershipButton) {
+    addMembershipButton.addEventListener('click', createMembership);
+  }
 });
-

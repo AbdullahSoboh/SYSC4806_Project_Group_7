@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -161,6 +162,16 @@ public class PerkController {
         // ensure counters default to 0 if omitted by client
         if (perk.getUpvotes() == null) perk.setUpvotes(0);
         if (perk.getDownvotes() == null) perk.setDownvotes(0);
+
+        if (perk.getExpiryDate() != null) {
+            LocalDate today = LocalDate.now();
+            if (perk.getExpiryDate().isBefore(today)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Expiry date cannot be in the past."
+                );
+            }
+        }
         return perkRepository.save(perk);
     }
 

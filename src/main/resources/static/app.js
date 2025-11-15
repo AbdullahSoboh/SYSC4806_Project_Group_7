@@ -258,6 +258,23 @@ async function addPerk(e) {
         return;
     }
 
+    const expiryDateValue = document.getElementById('expiryDate').value;
+
+    if (expiryDateValue) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to local midnight
+
+        // Parse YYYY-MM-DD string
+        const [year, month, day] = expiryDateValue.split('-').map(Number);
+        // Create date as local midnight (month is 0-indexed)
+        const localInputDate = new Date(year, month - 1, day);
+
+        if (localInputDate < today) {
+            alert('Expiry date cannot be in the past. Please select today or a future date.');
+            return;
+        }
+    }
+
     const perk = {
         title: document.getElementById('title').value,
         description: document.getElementById('description').value,

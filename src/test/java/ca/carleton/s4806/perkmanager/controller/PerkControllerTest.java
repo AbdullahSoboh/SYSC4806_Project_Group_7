@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Integration test for the PerkController.
- *
+ * <p>
  * This test uses @SpringBootTest to load the full application context
  * and @AutoConfigureMockMvc to set up a MockMvc instance for sending
  * requests to the controller without a running server.
@@ -70,7 +70,7 @@ public class PerkControllerTest {
 
     /**
      * Tests the GET /api/perks endpoint.
-     *
+     * <p>
      * It performs a GET request and verifies that the response has:
      * 1. An HTTP 200 (OK) status.
      * 2. A content type of "application/json".
@@ -197,20 +197,19 @@ public class PerkControllerTest {
 
     /**
      * Round-trip verification for create + read.
-     *
+     * <p>
      * Goal: Ensure that a perk created via POST /api/perks
      * is actually persisted and then retrievable via GET /api/perks.
-     *
+     * <p>
      * Given a valid JSON payload for a new perk
      * when the client posts it to the API and then immediately fetches all perks,
      * then the GET response must include the newly created perk with the expected fields.
-     *
+     * <p>
      * Asserts
-     *
-     *   201 Created on POST
-     *   200 OK + application/json on GET
-     *   Array contains an item whose title and location match the POSTed data
-     *
+     * <p>
+     * 201 Created on POST
+     * 200 OK + application/json on GET
+     * Array contains an item whose title and location match the POSTed data
      *
      * @author Imann Brar
      * @version 2.0
@@ -291,21 +290,21 @@ public class PerkControllerTest {
 
     /**
      * Server authority over identifiers: client-supplied id must be ignored.
-     *
+     * <p>
      * Goal: Verify that the API does not trust or persist a client-provided primary key.
      * The server must generate its own identifier when persisting a new entity.
-     *
+     * <p>
      * Given a POST request whose JSON includes id = 999
      * when the server creates the perk,
      * then the response must contain an auto-generated, positive id that is
      * not the client-supplied value.
-     *
+     * <p>
      * Asserts:
-     *
-     *   201 Created + JSON response
-     *   $.id ≠ 999
-     *   $.id; 0 (server-generated)
-     *
+     * <p>
+     * 201 Created + JSON response
+     * $.id ≠ 999
+     * $.id; 0 (server-generated)
+     * <p>
      * Rationale: Prevents clients from colliding with or spoofing primary keys, and
      * enforces the domain rule that identifiers are owned by the persistence layer.
      *
@@ -340,5 +339,73 @@ public class PerkControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(not(999)))       // not the client-provided id
                 .andExpect(jsonPath("$.id").value(greaterThan(0))); // server-generated positive id
+    }
+
+    /**
+     * Tests POST /api/perks/{id}/upvote for a valid perk.
+     * Expects 200 OK and the upvote count to be incremented.
+     */
+    @Test
+    public void testUpvotePerk_Success() throws Exception {
+        Perk perk = new Perk("Test Upvote", "Desc", "Prod", testMembership, null, "Ottawa, ON");
+        perk.setUpvotes(0);
+        perk.setDownvotes(0);
+        Perk savedPerk = perkRepository.save(perk);
+        Long perkId = savedPerk.getId();
+
+        mockMvc.perform(post("/api/perks/" + perkId + "/upvote"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(perkId.intValue())))
+                .andExpect(jsonPath("$.upvotes", is(1)))
+                .andExpect(jsonPath("$.downvotes", is(0)));
+    }
+
+    /**
+     * Tests POST /api/perks/{id}/upvote for a non-existent perk.
+     * Expects 404 Not Found.
+     */
+    @Test
+    public void testUpvotePerk_NotFound() throws Exception {
+        long nonExistentId = 999L;
+
+        mockMvc.perform(post("/api/perks/" + nonExistentId + "/upvote"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Tests POST /api/perks/{id}/downvote for a valid perk.
+     * Expects 200 OK and the downvote count to be incremented.
+     */
+    @Test
+    public void testDownvotePerk_Success() throws Exception {
+        Perk perk = new Perk("Test Downvote", "Desc", "Prod", testMembership, null, "Ottawa, ON");
+        perk.setUpvotes(0);
+        perk.setDownvotes(0);
+        Perk savedPerk = perkRepository.save(perk);
+        Long perkId = savedPerk.getId();
+
+        mockMvc.perform(post("/api/perks/" + perkId + "/downvote"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(perkId.intValue())))
+                .andExpect(jsonPath("$.upvotes", is(0)))
+                .andExpect(jsonPath("$.downvotes", is(1)));
+    }
+
+    /**
+     * Tests POST /api/perks/{id}/downvote for a non-existent perk.
+     * Expects 404 Not Found.
+     */
+    @Test
+    public void testDownvotePerk_NotFound() throws Exception {
+        long nonExistentId = 999L;
+
+        mockMvc.perform(post("/api/perks/" + nonExistentId + "/downvote"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
     }
 }

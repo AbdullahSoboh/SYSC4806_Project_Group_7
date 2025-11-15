@@ -47,6 +47,19 @@
         </div>
         <div class="right">
             <h2>Available Perks</h2>
+            <div class="perk-filters">
+                <input
+                        type="text"
+                        id="perk-search-input"
+                        placeholder="Search perks by title or product..."
+                />
+
+                <select id="perk-sort-select">
+                    <option value="">Sort by</option>
+                    <option value="mostPopular">Most popular</option>
+                    <option value="leastPopular">Least popular</option>
+                </select>
+            </div>
             <div id="perk-list-container"></div>
         </div>
     </div>

@@ -158,11 +158,15 @@ hr {
 }
 
 .delete-btn {
-    color: #d9534f; /* A standard 'danger' red */
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    color: #d9534f;
     font-size: 1.2rem;
 }
 
 .delete-btn:hover {
-    color: #c9302c; /* A darker red on hover */
-    background-color: #f0f0f0;
+    color: #c9302c;
+    background-color: #e0e0e0;
 }

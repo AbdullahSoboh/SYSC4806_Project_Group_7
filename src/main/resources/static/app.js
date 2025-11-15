@@ -179,11 +179,11 @@ async function fetchAndRenderPerks() {
 
         const htmlContent = perks.map(perk => `
             <div class="perk-item" id="perk-item-${perk.id}">
+                <button class="vote-btn delete-btn" data-id="${perk.id}">&times;</button> 
                 <div class="perk-votes">
                     <button class="vote-btn upvote-btn" data-id="${perk.id}">▲</button>
                     <span class="vote-score" id="score-${perk.id}">${perk.score ?? 0}</span>
                     <button class="vote-btn downvote-btn" data-id="${perk.id}">▼</button>
-                    <button class="vote-btn delete-btn" data-id="${perk.id}">&times;</button> 
                 </div>
                 <div class="perk-details">
                     <strong>${perk.title ?? ""}</strong><br>

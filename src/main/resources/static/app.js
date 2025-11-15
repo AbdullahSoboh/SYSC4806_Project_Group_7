@@ -176,20 +176,66 @@ async function fetchAndRenderPerks() {
             return;
         }
         perkListContainer.textContent = '';
+
         const htmlContent = perks.map(perk => `
             <div class="perk-item">
-                <strong>${perk.title ?? ""}</strong><br>
-                        ${perk.description ?? ""}<br>
-                        ${perk.product ?? ""} • ${perk.membership?.name ?? ""}<br>
-                        <small>Location: ${perk.location?.trim() || 'Global'}</small><br>
-                        <small>Expiry: ${perk.expiryDate ?? perk.expiry_date ?? "No expiry"}</small>
+                <div class="perk-votes">
+                    <button class="vote-btn upvote-btn" data-id="${perk.id}">▲</button>
+                    <span class="vote-score" id="score-${perk.id}">${perk.score ?? 0}</span>
+                    <button class="vote-btn downvote-btn" data-id="${perk.id}">▼</button>
+                </div>
+                <div class="perk-details">
+                    <strong>${perk.title ?? ""}</strong><br>
+                    ${perk.description ?? ""}<br>
+                    ${perk.product ?? ""} • ${perk.membership?.name ?? ""}<br>
+                    <small>Location: ${perk.location?.trim() || 'Global'}</small><br>
+                    <small>Expiry: ${perk.expiryDate ?? perk.expiry_date ?? "No expiry"}</small>
+                </div>
             </div>
         `).join('');
+
         perkListContainer.innerHTML = htmlContent;
     } catch (error) {
         perkListContainer.textContent = 'Failed to load perks.';
         console.error('Error fetching perks:', error);
         setMembershipSelectMessage('Unable to load memberships');
+    }
+}
+
+/**
+ * Handles sending a vote request to the API and updating the UI.
+ * @param {string} perkId - The ID of the perk to vote on.
+ * @param {'upvote' | 'downvote'} voteType - The type of vote.
+ */
+async function handleVote(perkId, voteType) {
+    const button = document.querySelector(`.${voteType}-btn[data-id="${perkId}"]`);
+    if (button) {
+        button.disabled = true;
+    }
+
+    try {
+        const response = await fetch(`/api/perks/${perkId}/${voteType}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to ${voteType}`);
+        }
+
+        const updatedPerk = await response.json();
+
+        const scoreElement = document.getElementById(`score-${perkId}`);
+        if (scoreElement && updatedPerk.score !== undefined) {
+            scoreElement.textContent = updatedPerk.score;
+        }
+
+    } catch (error) {
+        console.error(`Error ${voteType}ing:`, error);
+        alert(`Failed to record ${voteType}.`);
+    } finally {
+        if (button) {
+            button.disabled = false;
+        }
     }
 }
 
@@ -270,12 +316,32 @@ async function addPerk(e) {
 document.addEventListener("DOMContentLoaded", () => {
     fetchAndPopulateMemberships();
     fetchAndRenderPerks();
+
     const form = document.getElementById("new-perk-form");
     if (form) {
         form.addEventListener("submit", addPerk);
     }
+
     const addMembershipButton = document.getElementById('add-membership-btn');
     if (addMembershipButton) {
         addMembershipButton.addEventListener('click', createMembership);
+    }
+
+    const perkListContainer = document.getElementById('perk-list-container');
+    if (perkListContainer) {
+        perkListContainer.addEventListener('click', (event) => {
+            const target = event.target;
+            const perkId = target.dataset.id;
+
+            if (!perkId) {
+                return;
+            }
+
+            if (target.classList.contains('upvote-btn')) {
+                handleVote(perkId, 'upvote');
+            } else if (target.classList.contains('downvote-btn')) {
+                handleVote(perkId, 'downvote');
+            }
+        });
     }
 });

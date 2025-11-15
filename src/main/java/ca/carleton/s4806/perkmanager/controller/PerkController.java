@@ -6,24 +6,26 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
 
 /**
  * REST controller for managing Perks.
- *
+ * <p>
  * Provides API endpoints under the "/api/perks" path.
  * Allows Cross-Origin requests for frontend integration.
  *
  * @author Tommy Csete , Imann Brar
- * @version 1.0
+ * @version 2.0
  */
 
 @RestController
@@ -90,27 +92,63 @@ public class PerkController {
         return perkRepository.findAll(sort);
 
     }
+
+    /**
+     * Upvotes a perk.
+     * Responds to HTTP POST requests on "/api/perks/{id}/upvote".
+     *
+     * @param id The ID of the perk to upvote
+     * @return The updated Perk object
+     */
+    @PostMapping("/{id}/upvote")
+    public Perk upvotePerk(@PathVariable Long id) {
+        Perk perk = perkRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perk not found"));
+
+        Integer currentUpvotes = perk.getUpvotes();
+        perk.setUpvotes((currentUpvotes == null ? 0 : currentUpvotes) + 1);
+
+        return perkRepository.save(perk);
+    }
+
+    /**
+     * Downvotes a perk.
+     * Responds to HTTP POST requests on "/api/perks/{id}/downvote".
+     *
+     * @param id The ID of the perk to downvote
+     * @return The updated Perk object
+     */
+    @PostMapping("/{id}/downvote")
+    public Perk downvotePerk(@PathVariable Long id) {
+        Perk perk = perkRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perk not found"));
+
+        Integer currentDownvotes = perk.getDownvotes();
+        perk.setDownvotes((currentDownvotes == null ? 0 : currentDownvotes) + 1);
+
+        return perkRepository.save(perk);
+    }
+
     /**
      * Creates a new {@link Perk}.
-     *
+     * <p>
      * Accepts a JSON request body that maps to the {@link Perk} fields.
      * If the client omits vote counters, they are initialized to zero.
      * On success, the saved entity (including its generated {@code id}) is returned.</p>
-     *
+     * <p>
      * Example request:
-     *
+     * <p>
      * POST /api/perks
      * Content-Type: application/json
-     *
+     * <p>
      * {
-     *   "title": "Student Discount",
-     *   "description": "15% off with student ID",
-     *   "product": "Movie Tickets",
-     *   "membership": "University",
-     *   "location": "Ottawa, ON",
-     *   "expiryDate": "2026-12-31"
+     * "title": "Student Discount",
+     * "description": "15% off with student ID",
+     * "product": "Movie Tickets",
+     * "membership": "University",
+     * "location": "Ottawa, ON",
+     * "expiryDate": "2026-12-31"
      * }
-     *
      *
      * @param perk the perk data sent by the client
      * @return the persisted perk with its generated ID

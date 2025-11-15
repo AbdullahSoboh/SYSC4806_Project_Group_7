@@ -375,8 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 handleVote(perkId, 'upvote');
             } else if (target.classList.contains('downvote-btn')) {
                 handleVote(perkId, 'downvote');
-            }
-            else if (target.classList.contains('delete-btn')) {
+            } else if (target.classList.contains('delete-btn')) {
                 handleDelete(perkId);
             }
         });

@@ -1,9 +1,9 @@
 global:
   resolve_timeout: 5m
   smtp_smarthost: smtp.gmail.com:587
-  smtp_from: asoboh7@gmail.com
-  smtp_auth_username: asoboh7@gmail.com
-  smtp_auth_password: "xcux rnei qxgt onvm"
+  smtp_from: ${SMTP_FROM_EMAIL}
+  smtp_auth_username: ${SMTP_USERNAME}
+  smtp_auth_password: ${SMTP_PASSWORD}
   smtp_require_tls: true
 
 route:
@@ -12,5 +12,5 @@ route:
 receivers:
   - name: gmail_email
     email_configs:
-      - to: asoboh7@gmail.com
+      - to: ${ALERT_EMAIL}
         send_resolved: true

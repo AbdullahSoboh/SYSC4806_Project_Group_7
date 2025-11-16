@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 5s # Scrape often for the demo!
+
+rule_files:
+  - alert.rules.yml
+
+scrape_configs:
+  - job_name: 'perk-manager'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # 'host.docker.internal' allows Docker to see your Mac/Windows host
+      - targets: ['host.docker.internal:8080']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']

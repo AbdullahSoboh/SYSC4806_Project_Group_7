@@ -1,0 +1,8 @@
+groups:
+  - name: PerkAlerts
+    rules:
+      - alert: HighVotingActivity
+        expr: increase(perk_votes_total[1m]) > 5
+        annotations:
+          summary: "High voting activity detected"
+          description: "perk_votes_total increased by more than 5 over the last minute."

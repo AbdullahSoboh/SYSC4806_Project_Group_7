@@ -2,6 +2,8 @@ package ca.carleton.s4806.perkmanager.controller;
 
 import ca.carleton.s4806.perkmanager.model.Perk;
 import ca.carleton.s4806.perkmanager.repository.PerkRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -49,14 +51,18 @@ public class PerkController {
     );
 
     private final PerkRepository perkRepository; // Repository for Perk Data operations
+    private final Counter voteCounter;
 
     /**
      * Constructs the controller and injects the PerkRepository.
      *
      * @param perkRepository The repository implementation provided by Spring.
      */
-    public PerkController(PerkRepository perkRepository) {
+    public PerkController(PerkRepository perkRepository, MeterRegistry registry) {
         this.perkRepository = perkRepository;
+        this.voteCounter = Counter.builder("perk_votes_total")
+                .description("Total votes cast")
+                .register(registry);
     }
 
     /**
@@ -109,6 +115,7 @@ public class PerkController {
 
         Integer currentUpvotes = perk.getUpvotes();
         perk.setUpvotes((currentUpvotes == null ? 0 : currentUpvotes) + 1);
+        voteCounter.increment();
 
         return perkRepository.save(perk);
     }
@@ -127,6 +134,7 @@ public class PerkController {
 
         Integer currentDownvotes = perk.getDownvotes();
         perk.setDownvotes((currentDownvotes == null ? 0 : currentDownvotes) + 1);
+        voteCounter.increment();
 
         return perkRepository.save(perk);
     }

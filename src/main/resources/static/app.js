@@ -161,37 +161,75 @@ async function createMembership(event) {
     }
 }
 
-function getPerkFilters() {
-    const searchInput = document.getElementById('perk-search-input');
-    const sortSelect = document.getElementById('perk-sort-select');
+const SORT_OPTION_CONFIG = Object.freeze({
+    mostPopular: { sortBy: 'score', direction: 'desc' },
+    leastPopular: { sortBy: 'score', direction: 'asc' }
+});
 
+let activeSortSnapshot = null;
+let sortWarningElement = null;
+let suppressSortWarning = false;
+
+function showSortWarning() {
+    if (!sortWarningElement || suppressSortWarning) {
+        return;
+    }
+    sortWarningElement.classList.remove('hidden');
+}
+
+function hideSortWarning() {
+    if (!sortWarningElement) {
+        return;
+    }
+    sortWarningElement.classList.add('hidden');
+}
+
+function resolveSortConfig(value) {
+    return SORT_OPTION_CONFIG[value]
+        ? {...SORT_OPTION_CONFIG[value]}
+        : { sortBy: null, direction: null };
+}
+
+function markSortSnapshotActive(config) {
+    activeSortSnapshot = config ? {...config} : null;
+    hideSortWarning();
+}
+
+function clearSortSnapshot() {
+    activeSortSnapshot = null;
+    hideSortWarning();
+}
+
+function getPerkFilters(sortConfig = null) {
+    const searchInput = document.getElementById('perk-search-input');
     const search = searchInput ? searchInput.value.trim() : '';
 
-    let sortBy = null;
-    let direction = null;
-
-    if (sortSelect) {
-        const sortValue = sortSelect.value;
-        if (sortValue === 'mostPopular') {
-            // Sort by score descending
-            sortBy = 'score';
-            direction = 'desc';
-        } else if (sortValue === 'leastPopular') {
-            // Sort by score ascending
-            sortBy = 'score';
-            direction = 'asc';
-        }
-    }
+    const sortBy = sortConfig?.sortBy ?? null;
+    const direction = sortConfig?.direction ?? null;
 
     return { search, sortBy, direction };
 }
 
-async function fetchAndRenderPerks(preserveScrollPosition = false) {
+async function fetchAndRenderPerks(options = {}) {
+    const {
+        preserveScrollPosition = false,
+        sortConfig = null
+    } = options;
     const perkListContainer = document.getElementById('perk-list-container');
+    if (!perkListContainer) {
+        return;
+    }
     const previousScrollPosition = preserveScrollPosition ? window.scrollY : null;
-    perkListContainer.textContent = 'Loading perks...';
+    const hasExistingContent = perkListContainer.children.length > 0;
+    const previousHeight = hasExistingContent ? perkListContainer.offsetHeight : null;
+
+    if (!hasExistingContent) {
+        perkListContainer.textContent = 'Loading perks...';
+    } else if (previousHeight !== null) {
+        perkListContainer.style.minHeight = `${previousHeight}px`;
+    }
     try {
-        const { search, sortBy, direction } = getPerkFilters();
+        const { search, sortBy, direction } = getPerkFilters(sortConfig);
 
         // Build query string
         const params = new URLSearchParams();
@@ -219,7 +257,7 @@ async function fetchAndRenderPerks(preserveScrollPosition = false) {
         perkListContainer.textContent = '';
 
         const htmlContent = perks.map(perk => `
-            <div class="perk-item">
+            <div class="perk-item" data-perk-id="${perk.id}">
                 <div class="perk-votes">
                     <button class="vote-btn upvote-btn" data-id="${perk.id}">▲</button>
                     <span class="vote-score" id="score-${perk.id}">${perk.score ?? 0}</span>
@@ -243,6 +281,10 @@ async function fetchAndRenderPerks(preserveScrollPosition = false) {
         perkListContainer.textContent = 'Failed to load perks.';
         console.error('Error fetching perks:', error);
         setMembershipSelectMessage('Unable to load memberships');
+    } finally {
+        if (perkListContainer) {
+            perkListContainer.style.minHeight = '';
+        }
     }
 }
 
@@ -269,8 +311,14 @@ async function handleVote(perkId, voteType) {
         // We don't actually need the body anymore, but you can leave this line:
         await response.json();
 
-        // 🔁 Re-fetch the perk list using current search + sort while keeping scroll position
-        await fetchAndRenderPerks(true);
+        const shouldSkipFetch = Boolean(activeSortSnapshot);
+        if (shouldSkipFetch) {
+            updatePerkScoreDisplay(perkId, voteType);
+            showSortWarning();
+        } else {
+            // 🔁 Re-fetch the perk list using current search + sort
+            await fetchAndRenderPerks({ preserveScrollPosition: true });
+        }
 
     } catch (error) {
         console.error(`Error ${voteType}ing:`, error);
@@ -280,6 +328,16 @@ async function handleVote(perkId, voteType) {
             button.disabled = false;
         }
     }
+}
+
+function updatePerkScoreDisplay(perkId, voteType) {
+    const scoreElement = document.getElementById(`score-${perkId}`);
+    if (!scoreElement) {
+        return;
+    }
+    const currentScore = Number(scoreElement.textContent) || 0;
+    const delta = voteType === 'upvote' ? 1 : -1;
+    scoreElement.textContent = String(currentScore + delta);
 }
 
 //Test the POST
@@ -349,6 +407,7 @@ async function addPerk(e) {
         }
 
         document.getElementById('new-perk-form').reset();
+        clearSortSnapshot();
         await fetchAndRenderPerks(); // Refresh the perk list (also refreshes memberships)
     } catch (error) {
         console.error('Error adding perk:', error);
@@ -358,7 +417,21 @@ async function addPerk(e) {
 
 document.addEventListener("DOMContentLoaded", () => {
     fetchAndPopulateMemberships();
+    clearSortSnapshot();
     fetchAndRenderPerks();
+
+    sortWarningElement = document.getElementById('sort-sync-warning');
+    const sortWarningDismissButton = document.getElementById('sort-warning-dismiss');
+    if (sortWarningDismissButton) {
+        sortWarningDismissButton.addEventListener('click', hideSortWarning);
+    }
+    const sortWarningSuppressButton = document.getElementById('sort-warning-suppress');
+    if (sortWarningSuppressButton) {
+        sortWarningSuppressButton.addEventListener('click', () => {
+            suppressSortWarning = true;
+            hideSortWarning();
+        });
+    }
 
     const form = document.getElementById("new-perk-form");
     if (form) {
@@ -394,6 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // small debounce so we don't spam the API on every keystroke
                 clearTimeout(searchTimeoutId);
                 searchTimeoutId = setTimeout(() => {
+                    clearSortSnapshot();
                     fetchAndRenderPerks();
                 }, 300);
             });
@@ -401,8 +475,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const sortSelect = document.getElementById('perk-sort-select');
     if (sortSelect) {
-        sortSelect.addEventListener('change', () => {
-            fetchAndRenderPerks();
+        sortSelect.addEventListener('change', async () => {
+            const sortValue = sortSelect.value;
+            if (!sortValue) {
+                clearSortSnapshot();
+                sortSelect.selectedIndex = 0;
+                await fetchAndRenderPerks({ preserveScrollPosition: true });
+                return;
+            }
+
+            const sortConfig = resolveSortConfig(sortValue);
+            await fetchAndRenderPerks({ sortConfig, preserveScrollPosition: true });
+            markSortSnapshotActive(sortConfig);
+            sortSelect.selectedIndex = 0; // visually reset to placeholder
         });
     }
 });

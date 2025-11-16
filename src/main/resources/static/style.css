@@ -84,6 +84,43 @@ button:hover {
     flex: 2;
 }
 
+.hidden {
+    display: none !important;
+}
+
+.sort-warning {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 12px 0;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #ff5f5f;
+    background-color: #ffecec;
+    color: #b30000;
+    font-size: 0.9rem;
+}
+
+.sort-warning-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.sort-warning button {
+    background: transparent;
+    color: #b30000;
+    border: 1px solid #ff5f5f;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.sort-warning button:hover {
+    background-color: #ff5f5f;
+    color: #fff;
+}
+
 #perk-list-container {
     background-color: white;
     border: 1px solid #ddd;

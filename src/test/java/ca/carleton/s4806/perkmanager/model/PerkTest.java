@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 class PerkTest {
 
     /**
-     * Verifies the constructor populates fields and defaults votes to zero.
+     * Verifies the constructor populates fields and defaults vote counters to zero.
      */
     @Test
     void constructorInitializesCoreFields() {
@@ -33,7 +33,6 @@ class PerkTest {
         assertEquals(expiry, perk.getExpiryDate());
         assertEquals(0, perk.getUpvotes());
         assertEquals(0, perk.getDownvotes());
-        assertEquals(0, perk.getVotes(), "Aggregated votes should default to 0");
         assertEquals(0, perk.getScore());
     }
 
@@ -55,7 +54,6 @@ class PerkTest {
         perk.setExpiryDate(expiry);
         perk.setUpvotes(7);
         perk.setDownvotes(2);
-        perk.setVotes(5); // new aggregated votes field
 
         assertEquals(42L, perk.getId());
         assertEquals("Updated Title", perk.getTitle());
@@ -67,7 +65,6 @@ class PerkTest {
         assertEquals(expiry, perk.getExpiryDate());
         assertEquals(7, perk.getUpvotes());
         assertEquals(2, perk.getDownvotes());
-        assertEquals(5, perk.getVotes(), "Aggregated votes should reflect setter value");
     }
 
     /**
@@ -85,19 +82,4 @@ class PerkTest {
         assertEquals(-2, perk.getScore());
     }
 
-    /**
-     * Ensures the new aggregated votes field does NOT influence score computation,
-     * which remains defined as upvotes - downvotes.
-     */
-    @Test
-    void votesFieldDoesNotAffectScore() {
-        Perk perk = new Perk();
-        perk.setUpvotes(3);
-        perk.setDownvotes(1);
-        perk.setVotes(100); // arbitrarily large; should not change score definition
-
-        assertEquals(2, perk.getScore(), "Score must remain upvotes - downvotes only");
-        perk.setVotes(-50);
-        assertEquals(2, perk.getScore(), "Score must be independent of aggregated votes value");
-    }
 }

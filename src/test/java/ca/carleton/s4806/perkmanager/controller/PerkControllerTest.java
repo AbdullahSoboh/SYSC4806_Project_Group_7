@@ -293,12 +293,10 @@ public class PerkControllerTest {
         Perk positiveScore = new Perk("Positive Score", "desc", "Movies", testMembership, LocalDate.now().plusMonths(1), "Ottawa, ON");
         positiveScore.setUpvotes(7);
         positiveScore.setDownvotes(2);
-        positiveScore.setVotes(0); // deliberately stale aggregated score
 
         Perk negativeScore = new Perk("Negative Score", "desc", "Movies", testMembership, LocalDate.now().plusMonths(1), "Ottawa, ON");
         negativeScore.setUpvotes(1);
         negativeScore.setDownvotes(6);
-        negativeScore.setVotes(100); // higher stored votes but lower actual score
 
         perkRepository.saveAll(List.of(positiveScore, negativeScore));
 

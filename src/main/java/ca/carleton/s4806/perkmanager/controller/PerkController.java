@@ -45,8 +45,7 @@ public class PerkController {
             Map.entry("upvotes", "upvotes"),
             Map.entry("downvotes", "downvotes"),
             Map.entry("expirydate", "expiryDate"),
-            Map.entry("location", "location"),
-            Map.entry("score", "votes")
+            Map.entry("location", "location")
     );
 
     private final PerkRepository perkRepository; // Repository for Perk Data operations
@@ -118,7 +117,6 @@ public class PerkController {
 
         Integer currentUpvotes = perk.getUpvotes();
         perk.setUpvotes((currentUpvotes == null ? 0 : currentUpvotes) + 1);
-        perk.setVotes(perk.getUpvotes() - perk.getDownvotes());
 
         return perkRepository.save(perk);
     }
@@ -137,7 +135,6 @@ public class PerkController {
 
         Integer currentDownvotes = perk.getDownvotes();
         perk.setDownvotes((currentDownvotes == null ? 0 : currentDownvotes) + 1);
-        perk.setVotes(perk.getUpvotes() - perk.getDownvotes());
 
         return perkRepository.save(perk);
     }

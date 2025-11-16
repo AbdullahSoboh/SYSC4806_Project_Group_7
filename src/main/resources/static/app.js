@@ -309,7 +309,6 @@ async function handleVote(perkId, voteType) {
             throw new Error(`Failed to ${voteType}`);
         }
 
-        // We don't actually need the body anymore, but you can leave this line:
         await response.json();
 
         const shouldSkipFetch = Boolean(activeSortSnapshot);

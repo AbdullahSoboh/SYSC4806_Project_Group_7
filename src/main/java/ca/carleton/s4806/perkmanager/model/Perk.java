@@ -32,14 +32,6 @@ public class Perk {
 
     private Integer downvotes = 0; // Number of downvotes this perk has received from users
 
-    /**
-     * Aggregated vote counter for simple +/- voting use-cases.
-     * Initialized to 0 and persisted by JPA.
-     * (This does NOT replace upvotes/downvotes; it’s an additional field.)
-     */
-    @Column(nullable = false)
-    private int votes = 0;
-
     private String location; // Geographic location where the perk is valid (e.g., "Ottawa, ON")
 
     @Column(name = "expiry_date")
@@ -194,24 +186,6 @@ public class Perk {
      */
     public void setDownvotes(Integer downvotes) {
         this.downvotes = downvotes;
-    }
-
-    /**
-     * Gets the aggregated votes counter.
-     *
-     * @return the aggregated votes value
-     */
-    public int getVotes() {
-        return votes;
-    }
-
-    /**
-     * Sets the aggregated votes counter.
-     *
-     * @param votes the aggregated votes value to set
-     */
-    public void setVotes(int votes) {
-        this.votes = votes;
     }
 
     /**

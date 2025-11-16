@@ -47,6 +47,26 @@
         </div>
         <div class="right">
             <h2>Available Perks</h2>
+            <div class="perk-filters">
+                <input
+                        type="text"
+                        id="perk-search-input"
+                        placeholder="Search perks by title or product..."
+                />
+
+                <select id="perk-sort-select">
+                    <option value="">Sort by</option>
+                    <option value="mostPopular">Most popular</option>
+                    <option value="leastPopular">Least popular</option>
+                </select>
+            </div>
+            <div id="sort-sync-warning" class="sort-warning hidden">
+                <span>Sorted list may be out of sync. Use "Sort by" to refresh.</span>
+                <div class="sort-warning-actions">
+                    <button type="button" id="sort-warning-dismiss">Acknowledge</button>
+                    <button type="button" id="sort-warning-suppress">Don't show again</button>
+                </div>
+            </div>
             <div id="perk-list-container"></div>
         </div>
     </div>

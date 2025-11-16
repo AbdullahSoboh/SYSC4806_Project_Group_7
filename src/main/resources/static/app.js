@@ -186,8 +186,9 @@ function getPerkFilters() {
     return { search, sortBy, direction };
 }
 
-async function fetchAndRenderPerks() {
+async function fetchAndRenderPerks(preserveScrollPosition = false) {
     const perkListContainer = document.getElementById('perk-list-container');
+    const previousScrollPosition = preserveScrollPosition ? window.scrollY : null;
     perkListContainer.textContent = 'Loading perks...';
     try {
         const { search, sortBy, direction } = getPerkFilters();
@@ -235,6 +236,9 @@ async function fetchAndRenderPerks() {
         `).join('');
 
         perkListContainer.innerHTML = htmlContent;
+        if (preserveScrollPosition && previousScrollPosition !== null) {
+            window.scrollTo(0, previousScrollPosition);
+        }
     } catch (error) {
         perkListContainer.textContent = 'Failed to load perks.';
         console.error('Error fetching perks:', error);
@@ -265,8 +269,8 @@ async function handleVote(perkId, voteType) {
         // We don't actually need the body anymore, but you can leave this line:
         await response.json();
 
-        // 🔁 Re-fetch the perk list using current search + sort
-        await fetchAndRenderPerks();
+        // 🔁 Re-fetch the perk list using current search + sort while keeping scroll position
+        await fetchAndRenderPerks(true);
 
     } catch (error) {
         console.error(`Error ${voteType}ing:`, error);

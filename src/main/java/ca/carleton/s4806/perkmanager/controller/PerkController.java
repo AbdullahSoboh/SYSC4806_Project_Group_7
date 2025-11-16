@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -71,27 +72,35 @@ public class PerkController {
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "direction", required = false) String direction
     ) {
-        Sort sort = resolveSort(sortBy, direction);
+        boolean sortByScore = isScoreSort(sortBy);
+        Sort sort = sortByScore ? Sort.unsorted() : resolveSort(sortBy, direction);
         boolean hasSearch = searchKeyword != null && !searchKeyword.trim().isEmpty();
+        List<Perk> perks;
 
         if (hasSearch) {
             if (sort.isUnsorted()) {
-                return perkRepository.findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
+                perks = perkRepository.findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
                         searchKeyword,
                         searchKeyword
                 );
+            } else {
+                perks = perkRepository.findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
+                        searchKeyword,
+                        searchKeyword,
+                        sort
+                );
             }
-            return perkRepository.findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
-                    searchKeyword,
-                    searchKeyword,
-                    sort
-            );
+        } else {
+            perks = sort.isUnsorted()
+                    ? perkRepository.findAll()
+                    : perkRepository.findAll(sort);
         }
 
-        if (sort.isUnsorted()) {
-            return perkRepository.findAll();
+        if (sortByScore) {
+            sortPerksByScore(perks, direction);
         }
-        return perkRepository.findAll(sort);
+
+        return perks;
 
     }
 
@@ -194,5 +203,21 @@ public class PerkController {
                         : Sort.Direction.ASC;
 
         return Sort.by(sortDirection, property);
+    }
+
+    private boolean isScoreSort(String sortBy) {
+        return sortBy != null && sortBy.trim().equalsIgnoreCase("score");
+    }
+
+    private void sortPerksByScore(List<Perk> perks, String direction) {
+        if (perks == null || perks.size() < 2) {
+            return;
+        }
+
+        Comparator<Perk> comparator = Comparator.comparingInt(Perk::getScore);
+        if (direction != null && direction.equalsIgnoreCase("desc")) {
+            comparator = comparator.reversed();
+        }
+        perks.sort(comparator);
     }
 }

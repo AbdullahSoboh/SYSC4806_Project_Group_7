@@ -288,6 +288,37 @@ public class PerkControllerTest {
                 .andExpect(jsonPath("$[1].title", is("Low Votes")));
     }
 
+    @Test
+    public void testGetPerksSortsByScoreUsingComputedBalance() throws Exception {
+        Perk positiveScore = new Perk("Positive Score", "desc", "Movies", testMembership, LocalDate.now().plusMonths(1), "Ottawa, ON");
+        positiveScore.setUpvotes(7);
+        positiveScore.setDownvotes(2);
+        positiveScore.setVotes(0); // deliberately stale aggregated score
+
+        Perk negativeScore = new Perk("Negative Score", "desc", "Movies", testMembership, LocalDate.now().plusMonths(1), "Ottawa, ON");
+        negativeScore.setUpvotes(1);
+        negativeScore.setDownvotes(6);
+        negativeScore.setVotes(100); // higher stored votes but lower actual score
+
+        perkRepository.saveAll(List.of(positiveScore, negativeScore));
+
+        mockMvc.perform(get("/api/perks")
+                        .param("sortBy", "score")
+                        .param("direction", "desc"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title", is("Positive Score")))
+                .andExpect(jsonPath("$[1].title", is("Negative Score")));
+
+        mockMvc.perform(get("/api/perks")
+                        .param("sortBy", "score")
+                        .param("direction", "asc"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title", is("Negative Score")))
+                .andExpect(jsonPath("$[1].title", is("Positive Score")));
+    }
+
     /**
      * Server authority over identifiers: client-supplied id must be ignored.
      * <p>

@@ -23,6 +23,8 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -436,5 +438,38 @@ public class PerkControllerTest {
         mockMvc.perform(post("/api/perks/" + nonExistentId + "/downvote"))
                 .andDo(print())
                 .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Tests DELETE /api/perks/{id} for a valid perk.
+     * Expects 204 No Content and verifies the perk is removed from the database.
+     */
+    @Test
+    public void testDeletePerk_Success() throws Exception {
+        Perk perk = new Perk("Perk to be Deleted", "Desc", "Prod", testMembership, null, "Ottawa, ON");
+        Perk savedPerk = perkRepository.save(perk);
+        Long perkId = savedPerk.getId();
+
+        mockMvc.perform(delete("/api/perks/" + perkId))
+                .andDo(print())
+                .andExpect(status().isNoContent()); // 204
+
+        assertFalse(
+                perkRepository.findById(perkId).isPresent(),
+                "Perk should be deleted from the database"
+        );
+    }
+
+    /**
+     * Tests DELETE /api/perks/{id} for a non-existent perk.
+     * Expects 404 Not Found.
+     */
+    @Test
+    public void testDeletePerk_NotFound() throws Exception {
+        long nonExistentId = 999L;
+
+        mockMvc.perform(delete("/api/perks/" + nonExistentId))
+                .andDo(print())
+                .andExpect(status().isNotFound()); // 404
     }
 }

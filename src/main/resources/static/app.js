@@ -257,7 +257,8 @@ async function fetchAndRenderPerks(options = {}) {
         perkListContainer.textContent = '';
 
         const htmlContent = perks.map(perk => `
-            <div class="perk-item" data-perk-id="${perk.id}">
+            <div class="perk-item" id="perk-item-${perk.id}">
+                <button class="vote-btn delete-btn" data-id="${perk.id}">&times;</button> 
                 <div class="perk-votes">
                     <button class="vote-btn upvote-btn" data-id="${perk.id}">▲</button>
                     <span class="vote-score" id="score-${perk.id}">${perk.score ?? 0}</span>
@@ -316,7 +317,7 @@ async function handleVote(perkId, voteType) {
             updatePerkScoreDisplay(perkId, voteType);
             showSortWarning();
         } else {
-            // 🔁 Re-fetch the perk list using current search + sort
+            // Re-fetch the perk list using current search + sort
             await fetchAndRenderPerks({ preserveScrollPosition: true });
         }
 
@@ -339,6 +340,39 @@ function updatePerkScoreDisplay(perkId, voteType) {
     const delta = voteType === 'upvote' ? 1 : -1;
     scoreElement.textContent = String(currentScore + delta);
 }
+
+/**
+ * Handles sending a delete request to the API.
+ * @param {string} perkId - The ID of the perk to delete.
+ */
+async function handleDelete(perkId) {
+    // Confirmation dialog before deleting
+    if (!confirm('Are you sure you want to delete this perk?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/perks/${perkId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            // Handle 404 Not Found or other server errors
+            throw new Error(`Failed to delete perk (status ${response.status})`);
+        }
+
+        // On success (204 No Content), remove the element from the DOM
+        const perkElement = document.getElementById(`perk-item-${perkId}`);
+        if (perkElement) {
+            perkElement.remove();
+        }
+
+    } catch (error) {
+        console.error('Error deleting perk:', error);
+        alert('Failed to delete perk.');
+    }
+}
+
 
 //Test the POST
 async function addPerk(e) {
@@ -457,6 +491,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 handleVote(perkId, 'upvote');
             } else if (target.classList.contains('downvote-btn')) {
                 handleVote(perkId, 'downvote');
+            } else if (target.classList.contains('delete-btn')) {
+                handleDelete(perkId);
             }
         });
     }

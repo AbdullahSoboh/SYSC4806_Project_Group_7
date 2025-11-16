@@ -5,6 +5,7 @@ import ca.carleton.s4806.perkmanager.repository.PerkRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -182,6 +183,22 @@ public class PerkController {
             }
         }
         return perkRepository.save(perk);
+    }
+
+    /**
+     * Deletes a perk by its ID.
+     * Responds to HTTP DELETE requests on "/api/perks/{id}".
+     *
+     * @param id The ID of the perk to delete.
+     * @return An HTTP 204 (No Content) response on success.
+     */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT) // 204
+    public void deletePerk(@PathVariable Long id) {
+        if (!perkRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Perk not found");
+        }
+        perkRepository.deleteById(id);
     }
 
     private Sort resolveSort(String sortBy, String direction) {

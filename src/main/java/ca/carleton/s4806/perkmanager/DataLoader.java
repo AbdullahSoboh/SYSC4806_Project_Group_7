@@ -2,12 +2,16 @@ package ca.carleton.s4806.perkmanager;
 
 import ca.carleton.s4806.perkmanager.model.Membership;
 import ca.carleton.s4806.perkmanager.model.Perk;
+import ca.carleton.s4806.perkmanager.model.User;
 import ca.carleton.s4806.perkmanager.repository.MembershipRepository;
 import ca.carleton.s4806.perkmanager.repository.PerkRepository;
+import ca.carleton.s4806.perkmanager.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Data loader that pre-loads sample Memberships and Perks into the database
@@ -15,15 +19,17 @@ import java.time.LocalDate;
  * This ensures we always have demo data available, even after restarts.
  *
  * @author Moesa
- * @version 1.0
+ * @version 2.0
  */
 @Component
 public class DataLoader implements CommandLineRunner {
 
+    private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
     private final PerkRepository perkRepository;
 
-    public DataLoader(MembershipRepository membershipRepository, PerkRepository perkRepository) {
+    public DataLoader(UserRepository userRepository, MembershipRepository membershipRepository, PerkRepository perkRepository) {
+        this.userRepository = userRepository;
         this.membershipRepository = membershipRepository;
         this.perkRepository = perkRepository;
     }
@@ -34,136 +40,57 @@ public class DataLoader implements CommandLineRunner {
      * @param args command line arguments
      */
     @Override
-    public void run(String... args) {
-        // Check if database already has data
-        if (membershipRepository.count() > 0) {
-            System.out.println("Database already contains data. Skipping pre-load.");
-            return;
-        }
+    public void run(String... args) throws Exception {
+        // Create Memberships
+        Membership visa = new Membership("Visa");
+        Membership mastercard = new Membership("Mastercard");
+        Membership caa = new Membership("CAA");
+        Membership studentId = new Membership("StudentID");
+        Membership costco = new Membership("Costco");
 
-        System.out.println("Database is empty. Pre-loading sample data...");
+        membershipRepository.saveAll(Arrays.asList(visa, mastercard, caa, studentId, costco));
 
-        // Create and save Memberships
-        Membership visa = membershipRepository.save(new Membership("Visa"));
-        Membership mastercard = membershipRepository.save(new Membership("Mastercard"));
-        Membership airMiles = membershipRepository.save(new Membership("Air Miles"));
-        Membership caa = membershipRepository.save(new Membership("CAA"));
-        Membership studentId = membershipRepository.save(new Membership("Student ID"));
-        Membership costco = membershipRepository.save(new Membership("Costco"));
-        Membership amazonPrime = membershipRepository.save(new Membership("Amazon Prime"));
+        // Create Users
+        User admin = new User("admin", "password", "admin@example.com", Arrays.asList(visa, mastercard, caa, studentId, costco));
+        User student = new User("student", "password", "student@example.com", Arrays.asList(studentId, visa));
+        User parent = new User("parent", "password", "parent@example.com", Arrays.asList(costco, caa));
 
-        System.out.println("✓ Loaded 7 memberships");
+        userRepository.saveAll(Arrays.asList(admin, student, parent));
 
-        // Create and save sample Perks
-        perkRepository.save(new Perk(
-                "10% off Movie Tickets",
-                "Get 10% discount on all movie tickets at Cineplex",
-                "Movie Tickets",
-                visa,
-                LocalDate.of(2026, 12, 31),
-                "Canada"
-        ));
+        // Create Perks
+        createPerks(visa, mastercard, caa, studentId, costco);
+    }
 
-        perkRepository.save(new Perk(
-                "Free Domestic Flight",
-                "Redeem 10,000 miles for a free one-way domestic flight",
-                "Flight",
-                airMiles,
-                LocalDate.of(2025, 12, 31),
-                "Canada"
-        ));
+    private void createPerks(Membership visa, Membership mastercard, Membership caa, Membership studentId, Membership costco) {
+        List<Perk> perks = Arrays.asList(
+                new Perk("5% Cash Back", "Get 5% cash back on all grocery purchases.", "Groceries", visa, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Free Travel Insurance", "Comprehensive travel insurance for trips up to 30 days.", "Travel", visa, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Airport Lounge Access", "Access to over 1000 airport lounges worldwide.", "Travel", visa, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Extended Warranty", "Double the manufacturer's warranty on eligible items.", "Electronics", visa, LocalDate.now().plusMonths(24), "Global"),
 
-        perkRepository.save(new Perk(
-                "Free Roadside Assistance",
-                "24/7 roadside assistance including towing up to 200km",
-                "Towing",
-                caa,
-                LocalDate.of(2026, 6, 30),
-                "Ontario"
-        ));
+                new Perk("3% Gas Rebate", "3% rebate on gas station purchases.", "Gas", mastercard, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Concert Presale", "Access to concert tickets before the general public.", "Entertainment", mastercard, LocalDate.now().plusMonths(6), "Global"),
+                new Perk("Price Protection", "Refund of price difference if item price drops within 60 days.", "Shopping", mastercard, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Mobile Device Insurance", "Coverage for lost or damaged mobile devices.", "Electronics", mastercard, LocalDate.now().plusMonths(12), "Global"),
 
-        perkRepository.save(new Perk(
-                "Student Discount - Adobe Creative Cloud",
-                "60% off Adobe Creative Cloud subscription",
-                "Software",
-                studentId,
-                LocalDate.of(2025, 8, 31),
-                "Global"
-        ));
+                new Perk("Free Towing", "Free towing up to 200km.", "Auto", caa, LocalDate.now().plusMonths(12), "Canada"),
+                new Perk("Hotel Discounts", "Up to 20% off at participating hotels.", "Travel", caa, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Dining Deals", "10% off at partner restaurants.", "Dining", caa, LocalDate.now().plusMonths(12), "Canada"),
+                new Perk("Movie Ticket Savings", "Discounted movie tickets at Cineplex.", "Entertainment", caa, LocalDate.now().plusMonths(12), "Canada"),
 
-        perkRepository.save(new Perk(
-                "$10 off Gas",
-                "Save $10 on gas purchases over $50",
-                "Gas",
-                costco,
-                LocalDate.of(2025, 11, 30),
-                "Canada"
-        ));
+                new Perk("10% Student Discount", "10% off at participating retail stores.", "Shopping", studentId, LocalDate.now().plusMonths(12), "Canada"),
+                new Perk("Cheap Transit Pass", "Reduced rate for monthly transit passes.", "Transit", studentId, LocalDate.now().plusMonths(4), "Ottawa, ON"),
+                new Perk("Library Access", "Access to university library resources.", "Education", studentId, LocalDate.now().plusMonths(12), "Ottawa, ON"),
+                new Perk("Software Licenses", "Free access to Office 365 and other software.", "Software", studentId, LocalDate.now().plusMonths(12), "Global"),
 
-        perkRepository.save(new Perk(
-                "Free Two-Day Shipping",
-                "Free two-day shipping on all eligible items",
-                "Shipping",
-                amazonPrime,
-                LocalDate.of(2026, 12, 31),
-                "Canada"
-        ));
+                new Perk("Bulk Savings", "Exclusive savings on bulk items.", "Groceries", costco, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Gas Savings", "Cheaper gas prices at Costco gas stations.", "Gas", costco, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Tire Services", "Free tire rotation and balancing.", "Auto", costco, LocalDate.now().plusMonths(12), "Global"),
+                new Perk("Pharmacy Savings", "Lower dispensing fees at Costco pharmacy.", "Health", costco, LocalDate.now().plusMonths(12), "Global"),
 
-        perkRepository.save(new Perk(
-                "2% Cash Back on Groceries",
-                "Earn 2% cash back on all grocery purchases",
-                "Groceries",
-                mastercard,
-                LocalDate.of(2026, 3, 31),
-                "Canada"
-        ));
+                new Perk("Car Rental Discount", "15% off car rentals.", "Travel", visa, LocalDate.now().plusMonths(6), "Global")
+        );
 
-        perkRepository.save(new Perk(
-                "Free Hotel Night",
-                "Redeem 15,000 miles for a free hotel night",
-                "Hotel",
-                airMiles,
-                LocalDate.of(2025, 12, 31),
-                "Canada"
-        ));
-
-        perkRepository.save(new Perk(
-                "20% off Restaurants",
-                "Get 20% off at participating restaurants",
-                "Dining",
-                visa,
-                LocalDate.of(2025, 11, 15),
-                "Ottawa, ON"
-        ));
-
-        perkRepository.save(new Perk(
-                "Student Transit Pass Discount",
-                "Save 40% on monthly transit passes",
-                "Transit",
-                studentId,
-                LocalDate.of(2026, 5, 31),
-                "Ottawa, ON"
-        ));
-
-        perkRepository.save(new Perk(
-                "Free Prime Video",
-                "Access to unlimited streaming of movies and TV shows",
-                "Streaming",
-                amazonPrime,
-                LocalDate.of(2026, 12, 31),
-                "Global"
-        ));
-
-        perkRepository.save(new Perk(
-                "CAA Travel Discounts",
-                "Save up to 15% on hotels and car rentals",
-                "Travel",
-                caa,
-                LocalDate.of(2026, 12, 31),
-                "Global"
-        ));
-
-        System.out.println("✓ Loaded 12 sample perks");
-        System.out.println("✓ Data pre-loading complete!");
+        perkRepository.saveAll(perks);
     }
 }

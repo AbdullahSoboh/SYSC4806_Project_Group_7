@@ -1,4 +1,4 @@
-package com.sysc4806.perkmanager.config;
+package ca.carleton.s4806.perkmanager.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;

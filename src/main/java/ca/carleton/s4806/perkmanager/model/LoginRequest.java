@@ -1,4 +1,4 @@
-package com.sysc4806.perkmanager.model;
+package ca.carleton.s4806.perkmanager.model;
 
 public class LoginRequest {
     private String username;

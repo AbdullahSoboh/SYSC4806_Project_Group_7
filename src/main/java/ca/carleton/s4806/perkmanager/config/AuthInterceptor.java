@@ -1,4 +1,4 @@
-package com.sysc4806.perkmanager.config;
+package ca.carleton.s4806.perkmanager.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

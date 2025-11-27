@@ -5,6 +5,7 @@ import ca.carleton.s4806.perkmanager.model.Membership;
 import ca.carleton.s4806.perkmanager.model.Perk;
 import ca.carleton.s4806.perkmanager.repository.MembershipRepository;
 import ca.carleton.s4806.perkmanager.repository.PerkRepository;
+import ca.carleton.s4806.perkmanager.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,9 @@ public class PerkControllerTest {
     private PerkRepository perkRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private MembershipRepository membershipRepository;
 
     @Autowired
@@ -67,6 +71,7 @@ public class PerkControllerTest {
     @AfterEach
     public void tearDown() {
         perkRepository.deleteAll();
+        userRepository.deleteAll();
         membershipRepository.deleteAll();
     }
 

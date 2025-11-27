@@ -2,6 +2,7 @@ package ca.carleton.s4806.perkmanager.repository;
 
 import ca.carleton.s4806.perkmanager.model.Membership;
 import ca.carleton.s4806.perkmanager.model.Perk;
+import ca.carleton.s4806.perkmanager.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the data access layer with an in-memory H2 database.
  *
  * @author Moesa Malik
- * @version 2.0
+ * @version 3.0
  */
 @SpringBootTest
 public class PerkRepositoryTest {
@@ -28,11 +29,15 @@ public class PerkRepositoryTest {
     private PerkRepository perkRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private MembershipRepository membershipRepository;
 
     @AfterEach
     public void tearDown() {
         perkRepository.deleteAll();
+        userRepository.deleteAll();
         membershipRepository.deleteAll();
     }
 
@@ -87,6 +92,7 @@ public class PerkRepositoryTest {
     public void testFindAll() {
         // Clear any existing data
         perkRepository.deleteAll();
+        userRepository.deleteAll();
         membershipRepository.deleteAll();
 
         // Create and save memberships first
@@ -107,6 +113,7 @@ public class PerkRepositoryTest {
     @Test
     public void testSearchByTitleOrProduct() {
         perkRepository.deleteAll();
+        userRepository.deleteAll();
         membershipRepository.deleteAll();
 
         Membership visa = membershipRepository.save(new Membership("Visa"));
@@ -132,6 +139,7 @@ public class PerkRepositoryTest {
     @Test
     public void testSearchWithSorting() {
         perkRepository.deleteAll();
+        userRepository.deleteAll();
         membershipRepository.deleteAll();
 
         Membership visa = membershipRepository.save(new Membership("Visa"));

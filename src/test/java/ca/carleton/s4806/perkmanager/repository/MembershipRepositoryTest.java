@@ -1,6 +1,7 @@
 package ca.carleton.s4806.perkmanager.repository;
 
 import ca.carleton.s4806.perkmanager.model.Membership;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,13 +15,26 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the data access layer with an in-memory H2 database.
  *
  * @author Moesa Malik
- * @version 1.0
+ * @version 2.0
  */
 @SpringBootTest
 public class MembershipRepositoryTest {
 
     @Autowired
     private MembershipRepository membershipRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PerkRepository perkRepository;
+
+    @AfterEach
+    public void tearDown() {
+        perkRepository.deleteAll();
+        userRepository.deleteAll();
+        membershipRepository.deleteAll();
+    }
 
     /**
      * Tests saving a membership to the database and retrieving it by ID.

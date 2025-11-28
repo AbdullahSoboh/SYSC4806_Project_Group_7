@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -61,11 +62,14 @@ public class PerkControllerTest {
     private ObjectMapper objectMapper;
 
     private Membership testMembership;
+    private MockHttpSession authSession;
 
     @BeforeEach
     public void setUp() {
         // Create a test membership that can be reused across tests
         testMembership = membershipRepository.save(new Membership("Visa"));
+        authSession = new MockHttpSession();
+        authSession.setAttribute("user", new Object());
     }
 
     @AfterEach
@@ -157,6 +161,7 @@ public class PerkControllerTest {
 
         mockMvc.perform(
                         post("/api/perks")
+                                .session(authSession)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(json)
                 )
@@ -193,6 +198,7 @@ public class PerkControllerTest {
 
         mockMvc.perform(
                         post("/api/perks")
+                                .session(authSession)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(json)
                 )
@@ -241,6 +247,7 @@ public class PerkControllerTest {
         // Create
         mockMvc.perform(
                         post("/api/perks")
+                                .session(authSession)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(json)
                 )
@@ -367,6 +374,7 @@ public class PerkControllerTest {
 
         mockMvc.perform(
                         post("/api/perks")
+                                .session(authSession)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(json)
                 )
@@ -389,7 +397,7 @@ public class PerkControllerTest {
         Perk savedPerk = perkRepository.save(perk);
         Long perkId = savedPerk.getId();
 
-        mockMvc.perform(post("/api/perks/" + perkId + "/upvote"))
+        mockMvc.perform(post("/api/perks/" + perkId + "/upvote").session(authSession))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -406,7 +414,7 @@ public class PerkControllerTest {
     public void testUpvotePerk_NotFound() throws Exception {
         long nonExistentId = 999L;
 
-        mockMvc.perform(post("/api/perks/" + nonExistentId + "/upvote"))
+        mockMvc.perform(post("/api/perks/" + nonExistentId + "/upvote").session(authSession))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
@@ -423,7 +431,7 @@ public class PerkControllerTest {
         Perk savedPerk = perkRepository.save(perk);
         Long perkId = savedPerk.getId();
 
-        mockMvc.perform(post("/api/perks/" + perkId + "/downvote"))
+        mockMvc.perform(post("/api/perks/" + perkId + "/downvote").session(authSession))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -440,7 +448,7 @@ public class PerkControllerTest {
     public void testDownvotePerk_NotFound() throws Exception {
         long nonExistentId = 999L;
 
-        mockMvc.perform(post("/api/perks/" + nonExistentId + "/downvote"))
+        mockMvc.perform(post("/api/perks/" + nonExistentId + "/downvote").session(authSession))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
@@ -455,7 +463,7 @@ public class PerkControllerTest {
         Perk savedPerk = perkRepository.save(perk);
         Long perkId = savedPerk.getId();
 
-        mockMvc.perform(delete("/api/perks/" + perkId))
+        mockMvc.perform(delete("/api/perks/" + perkId).session(authSession))
                 .andDo(print())
                 .andExpect(status().isNoContent()); // 204
 
@@ -473,7 +481,7 @@ public class PerkControllerTest {
     public void testDeletePerk_NotFound() throws Exception {
         long nonExistentId = 999L;
 
-        mockMvc.perform(delete("/api/perks/" + nonExistentId))
+        mockMvc.perform(delete("/api/perks/" + nonExistentId).session(authSession))
                 .andDo(print())
                 .andExpect(status().isNotFound()); // 404
     }

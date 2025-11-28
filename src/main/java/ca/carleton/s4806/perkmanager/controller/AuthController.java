@@ -16,18 +16,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+
+    public AuthController(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
     public ResponseEntity<User> login(@RequestBody LoginRequest loginRequest, HttpSession session) {
         User user = userRepository.findByUsername(loginRequest.getUsername());
 
-        if (user != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
             session.setAttribute("user", user);
             return ResponseEntity.ok(user);
         }

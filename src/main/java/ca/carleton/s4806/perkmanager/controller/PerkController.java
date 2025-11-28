@@ -1,7 +1,11 @@
 package ca.carleton.s4806.perkmanager.controller;
 
 import ca.carleton.s4806.perkmanager.model.Perk;
+import ca.carleton.s4806.perkmanager.model.User;
+import ca.carleton.s4806.perkmanager.model.Membership;
 import ca.carleton.s4806.perkmanager.repository.PerkRepository;
+import ca.carleton.s4806.perkmanager.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.data.domain.Sort;
@@ -48,10 +52,10 @@ public class PerkController {
             Map.entry("upvotes", "upvotes"),
             Map.entry("downvotes", "downvotes"),
             Map.entry("expirydate", "expiryDate"),
-            Map.entry("location", "location")
-    );
+            Map.entry("location", "location"));
 
     private final PerkRepository perkRepository; // Repository for Perk Data operations
+    private final UserRepository userRepository;
     private final Counter voteCounter;
 
     /**
@@ -59,8 +63,9 @@ public class PerkController {
      *
      * @param perkRepository The repository implementation provided by Spring.
      */
-    public PerkController(PerkRepository perkRepository, MeterRegistry registry) {
+    public PerkController(PerkRepository perkRepository, UserRepository userRepository, MeterRegistry registry) {
         this.perkRepository = perkRepository;
+        this.userRepository = userRepository;
         this.voteCounter = Counter.builder("perk_votes_total")
                 .description("Total votes cast")
                 .register(registry);
@@ -76,8 +81,7 @@ public class PerkController {
     public List<Perk> getAllPerks(
             @RequestParam(value = "search", required = false) String searchKeyword,
             @RequestParam(value = "sortBy", required = false) String sortBy,
-            @RequestParam(value = "direction", required = false) String direction
-    ) {
+            @RequestParam(value = "direction", required = false) String direction) {
         boolean sortByScore = isScoreSort(sortBy);
         Sort sort = sortByScore ? Sort.unsorted() : resolveSort(sortBy, direction);
         boolean hasSearch = searchKeyword != null && !searchKeyword.trim().isEmpty();
@@ -87,14 +91,12 @@ public class PerkController {
             if (sort.isUnsorted()) {
                 perks = perkRepository.findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
                         searchKeyword,
-                        searchKeyword
-                );
+                        searchKeyword);
             } else {
                 perks = perkRepository.findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
                         searchKeyword,
                         searchKeyword,
-                        sort
-                );
+                        sort);
             }
         } else {
             perks = sort.isUnsorted()
@@ -108,6 +110,39 @@ public class PerkController {
 
         return perks;
 
+    }
+
+    /**
+     * Gets a list of recommended perks for the currently logged-in user.
+     * Responds to HTTP GET requests on "/api/perks/recommended".
+     *
+     * @param session The HTTP session to retrieve the logged-in user.
+     * @return A List of recommended Perk Objects.
+     */
+    @GetMapping("/recommended")
+    public List<Perk> getRecommendedPerks(HttpSession session) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            return List.of(); // Return empty list if no user is logged in
+        }
+
+        Long userId = sessionUser.getId();
+        if (userId == null) {
+            return List.of();
+        }
+
+        // Fetch fresh user data to ensure we have the latest memberships
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return List.of();
+        }
+
+        List<Membership> memberships = user.getMemberships();
+        if (memberships == null || memberships.isEmpty()) {
+            return List.of();
+        }
+
+        return perkRepository.findByMembershipIn(memberships);
     }
 
     /**
@@ -153,7 +188,9 @@ public class PerkController {
      * <p>
      * Accepts a JSON request body that maps to the {@link Perk} fields.
      * If the client omits vote counters, they are initialized to zero.
-     * On success, the saved entity (including its generated {@code id}) is returned.</p>
+     * On success, the saved entity (including its generated {@code id}) is
+     * returned.
+     * </p>
      * <p>
      * Example request:
      * <p>
@@ -178,16 +215,17 @@ public class PerkController {
         // Force INSERT semantics even if the client sends an id
         perk.setId(null);
         // ensure counters default to 0 if omitted by client
-        if (perk.getUpvotes() == null) perk.setUpvotes(0);
-        if (perk.getDownvotes() == null) perk.setDownvotes(0);
+        if (perk.getUpvotes() == null)
+            perk.setUpvotes(0);
+        if (perk.getDownvotes() == null)
+            perk.setDownvotes(0);
 
         if (perk.getExpiryDate() != null) {
             LocalDate today = LocalDate.now();
             if (perk.getExpiryDate().isBefore(today)) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Expiry date cannot be in the past."
-                );
+                        "Expiry date cannot be in the past.");
             }
         }
         return perkRepository.save(perk);
@@ -219,10 +257,9 @@ public class PerkController {
             return Sort.unsorted();
         }
 
-        Sort.Direction sortDirection =
-                (direction != null && direction.equalsIgnoreCase("desc"))
-                        ? Sort.Direction.DESC
-                        : Sort.Direction.ASC;
+        Sort.Direction sortDirection = (direction != null && direction.equalsIgnoreCase("desc"))
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
 
         return Sort.by(sortDirection, property);
     }

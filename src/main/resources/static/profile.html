@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile - Perk Manager</title>
+</head>
+<body>
+
+<h1>Profile</h1>
+
+<p id="profile-message">Loading...</p>
+
+<h2>Your memberships</h2>
+<div id="membership-list"></div>
+
+<button id="save-btn">Save</button>
+
+<script>
+    async function loadProfile() {
+        const messageEl = document.getElementById("profile-message");
+        const listEl = document.getElementById("membership-list");
+
+        try {
+            // 1) Get current user (with memberships)
+            const userRes = await fetch("/api/current-user");
+            if (!userRes.ok) {
+                messageEl.textContent = "You must be logged in to view your profile.";
+                return;
+            }
+            const user = await userRes.json();
+            const userMemberships = user.memberships || [];
+            const userMembershipIds = userMemberships.map(m => m.id);
+
+            // 2) Get all available memberships
+            const memRes = await fetch("/api/memberships");
+            if (!memRes.ok) {
+                messageEl.textContent = "Failed to load memberships.";
+                return;
+            }
+            const memberships = await memRes.json();
+
+            // 3) Render checkboxes
+            messageEl.textContent = "";
+            listEl.innerHTML = "";
+
+            if (!Array.isArray(memberships) || memberships.length === 0) {
+                listEl.textContent = "No memberships available.";
+                return;
+            }
+
+            memberships.forEach(m => {
+                const wrapper = document.createElement("div");
+
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.className = "membership-checkbox";
+                cb.dataset.id = m.id;
+                if (userMembershipIds.includes(m.id)) {
+                    cb.checked = true;
+                }
+
+                const label = document.createElement("label");
+                label.textContent = m.name || ("Membership #" + m.id);
+
+                wrapper.appendChild(cb);
+                wrapper.appendChild(label);
+                listEl.appendChild(wrapper);
+            });
+
+        } catch (err) {
+            console.error("Error loading profile:", err);
+            messageEl.textContent = "Error loading profile.";
+        }
+    }
+
+    async function saveMemberships() {
+        const checkboxes = document.querySelectorAll(".membership-checkbox");
+        const selectedIds = [];
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                selectedIds.push(Number(cb.dataset.id));
+            }
+        });
+
+        try {
+            const res = await fetch("/api/user/memberships", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ membershipIds: selectedIds })
+            });
+
+            if (res.ok) {
+                alert("Memberships saved.");
+            } else if (res.status === 401) {
+                alert("You are not logged in.");
+            } else {
+                alert("Failed to save memberships.");
+            }
+        } catch (err) {
+            console.error("Error saving memberships:", err);
+            alert("Network error while saving memberships.");
+        }
+    }
+
+    document.getElementById("save-btn").addEventListener("click", saveMemberships);
+
+    // Load on page open
+    loadProfile();
+</script>
+
+</body>
+</html>

@@ -59,10 +59,17 @@ public class AuthController {
 
     @GetMapping("/current-user")
     public ResponseEntity<User> currentUser(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(user);
+
+        // reload from DB
+        User fresh = userRepository.findById(sessionUser.getId()).orElse(null);
+        if (fresh == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(fresh);
     }
 }

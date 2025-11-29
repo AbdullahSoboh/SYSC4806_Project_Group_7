@@ -1,40 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in | Perk Manager</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="auth-body">
+<div class="auth-wrapper">
+    <section class="auth-card">
+        <div class="auth-badge">Perk Manager</div>
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-subtitle">Please log in to continue or create an account to start exploring perks.</p>
 
-<h2>Login</h2>
+        <form id="login-form" class="auth-form">
+            <label for="username">Username</label>
+            <input id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
 
-<form id="login-form">
-    <input id="username" placeholder="Username" required>
-    <input id="password" type="password" placeholder="Password" required>
-    <button type="submit">Login</button>
-</form>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
 
-<p>Don't have an account? <a href="register.html">Register</a></p>
+            <button type="submit" id="login-submit" class="btn-primary">Sign in</button>
+        </form>
+
+        <p id="login-error" class="auth-error" role="status" aria-live="polite"></p>
+
+        <div class="auth-footnote">
+            New here? <a href="register.html">Create an account</a>
+        </div>
+    </section>
+
+    <aside class="auth-aside">
+        <div class="auth-aside-inner">
+            <h2>Unlock perks tailored to you</h2>
+            <p>Log in to manage your memberships and discover deals matched to your cards and programs.</p>
+            <a class="btn-ghost" href="register.html">Create account</a>
+        </div>
+    </aside>
+</div>
 
 <script>
+    const params = new URLSearchParams(window.location.search);
+    const nextParam = params.get("next");
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const errorEl = document.getElementById("login-error");
+    const button = document.getElementById("login-submit");
+
+    function resolveNext(nextValue) {
+        if (!nextValue) return "index.html";
+        // Prevent open redirects: only allow relative paths within the app
+        if (nextValue.startsWith("http://") || nextValue.startsWith("https://")) {
+            return "index.html";
+        }
+        return nextValue;
+    }
+
+    const nextDestination = resolveNext(nextParam);
+
     document.getElementById("login-form").addEventListener("submit", async (e) => {
         e.preventDefault();
+        errorEl.textContent = "";
+        button.disabled = true;
 
-        const res = await fetch("/api/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                username: username.value.trim(),
-                password: password.value
-            })
-        });
+        try {
+            const res = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    username: usernameInput.value.trim(),
+                    password: passwordInput.value
+                })
+            });
 
-        if (res.ok) {
-            window.location.href = "index.html";  // back to main page
-        } else {
-            alert("Invalid username or password");
+            if (res.ok) {
+                window.location.href = nextDestination || "index.html";
+            } else {
+                errorEl.textContent = "Invalid username or password. Please try again.";
+            }
+        } catch (err) {
+            console.error("Login failed:", err);
+            errorEl.textContent = "Unable to log in right now. Please try again.";
+        } finally {
+            button.disabled = false;
         }
     });
-</script>
 
+    // If redirected here because auth was required, surface a friendly prompt.
+    if (nextParam) {
+        errorEl.textContent = "Please log in to continue.";
+    }
+
+    // If already logged in (session cookie present), skip straight to app.
+    (async () => {
+        try {
+            const res = await fetch("/api/current-user", { credentials: "include" });
+            if (res.ok) {
+                window.location.href = nextDestination || "index.html";
+            }
+        } catch (err) {
+            console.warn("Unable to prefetch current user", err);
+        }
+    })();
+</script>
 </body>
 </html>

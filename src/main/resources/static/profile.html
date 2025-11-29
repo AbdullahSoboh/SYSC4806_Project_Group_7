@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Profile - Perk Manager</title>
+    <script src="auth.js" defer></script>
 </head>
 <body>
 
@@ -24,7 +25,11 @@
             // get current user with memberships
             const userRes = await fetch("/api/current-user");
             if (!userRes.ok) {
-                messageEl.textContent = "You must be logged in to view your profile.";
+                if (userRes.status === 401 || userRes.status === 403) {
+                    promptLoginRedirect("Please log in to view your profile.");
+                } else {
+                    messageEl.textContent = "Unable to load your profile right now.";
+                }
                 return;
             }
             const user = await userRes.json();
@@ -34,7 +39,11 @@
             // gell all available memberships
             const memRes = await fetch("/api/memberships");
             if (!memRes.ok) {
-                messageEl.textContent = "Failed to load memberships.";
+                if (memRes.status === 401 || memRes.status === 403) {
+                    promptLoginRedirect("Please log in to view your profile.");
+                } else {
+                    messageEl.textContent = "Failed to load memberships.";
+                }
                 return;
             }
             const memberships = await memRes.json();
@@ -91,8 +100,8 @@
 
             if (res.ok) {
                 alert("Memberships saved.");
-            } else if (res.status === 401) {
-                alert("You are not logged in.");
+            } else if (res.status === 401 || res.status === 403) {
+                promptLoginRedirect("Please log in to update your memberships.");
             } else {
                 alert("Failed to save memberships.");
             }
@@ -102,7 +111,10 @@
         }
     }
 
-    document.getElementById("save-btn").addEventListener("click", saveMemberships);
+    const saveBtn = document.getElementById("save-btn");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", saveMemberships);
+    }
 
     // Load on page open
     loadProfile();

@@ -76,7 +76,13 @@
             <div id="perk-list-container"></div>
         </div>
     </div>
-    <script src="app.js"></script>
-    <script src="auth.js"></script>
+    <script src="auth.js" defer></script>
+    <script defer>
+        (async () => {
+            // Redirect to login if there is no active session.
+            window.__prefetchedUser = await requireAuth();
+        })();
+    </script>
+    <script src="app.js" defer></script>
 </body>
 </html>

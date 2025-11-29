@@ -62,11 +62,14 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         user.setId(null);
 
         User saved = userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
 =======
+=======
+>>>>>>> Stashed changes
         if (userRepository.existsByEmailIgnoreCase(email)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
         }
@@ -74,6 +77,9 @@ public class AuthController {
         User newUser = new User(username, password, email, new ArrayList<>());
         User saved = userRepository.save(newUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
 

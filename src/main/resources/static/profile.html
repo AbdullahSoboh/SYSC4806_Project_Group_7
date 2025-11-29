@@ -21,7 +21,7 @@
         const listEl = document.getElementById("membership-list");
 
         try {
-            // 1) Get current user (with memberships)
+            // get current user with memberships
             const userRes = await fetch("/api/current-user");
             if (!userRes.ok) {
                 messageEl.textContent = "You must be logged in to view your profile.";
@@ -31,7 +31,7 @@
             const userMemberships = user.memberships || [];
             const userMembershipIds = userMemberships.map(m => m.id);
 
-            // 2) Get all available memberships
+            // gell all available memberships
             const memRes = await fetch("/api/memberships");
             if (!memRes.ok) {
                 messageEl.textContent = "Failed to load memberships.";
@@ -39,7 +39,7 @@
             }
             const memberships = await memRes.json();
 
-            // 3) Render checkboxes
+            // render the checkboxes
             messageEl.textContent = "";
             listEl.innerHTML = "";
 

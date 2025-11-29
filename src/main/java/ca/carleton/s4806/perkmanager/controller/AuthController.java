@@ -49,8 +49,6 @@ public class AuthController {
         if (userRepository.findByUsername(user.getUsername()) != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
-
-        // force new user creation
         user.setId(null);
 
         User saved = userRepository.save(user);
@@ -64,7 +62,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // reload from DB
+        // reload from the database
         User fresh = userRepository.findById(sessionUser.getId()).orElse(null);
         if (fresh == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

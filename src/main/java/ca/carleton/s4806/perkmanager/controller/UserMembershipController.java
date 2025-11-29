@@ -45,7 +45,7 @@ public class UserMembershipController {
         List<Membership> newMemberships =
                 membershipRepository.findAllById(ids);
 
-        // Re-fetch user from database to ensure we have the managed entity
+        // Refetch user from database to ensure we have the right entity
         user = userRepository.findById(user.getId()).orElse(null);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -65,7 +65,7 @@ public class UserMembershipController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Refresh from DB (important)
+        // Refresh from the database
         User fresh = userRepository.findById(user.getId()).orElse(null);
         if (fresh == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

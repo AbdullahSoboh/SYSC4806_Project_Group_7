@@ -24,18 +24,18 @@ import java.util.List;
  */
 @Repository
 public interface PerkRepository extends JpaRepository<Perk, Long> {
-    List<Perk> findByTitleContainingIgnoreCase(String titleKeyword);
+        List<Perk> findByTitleContainingIgnoreCase(String titleKeyword);
 
-    List<Perk> findByProductContainingIgnoreCase(String productKeyword);
+        List<Perk> findByProductContainingIgnoreCase(String productKeyword);
 
-    List<Perk> findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
-            String titleKeyword,
-            String productKeyword
-    );
+        List<Perk> findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
+                        String titleKeyword,
+                        String productKeyword);
 
-    List<Perk> findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
-            String titleKeyword,
-            String productKeyword,
-            Sort sort
-    );
+        List<Perk> findByTitleContainingIgnoreCaseOrProductContainingIgnoreCase(
+                        String titleKeyword,
+                        String productKeyword,
+                        Sort sort);
+
+        List<Perk> findByMembershipIn(List<ca.carleton.s4806.perkmanager.model.Membership> memberships);
 }

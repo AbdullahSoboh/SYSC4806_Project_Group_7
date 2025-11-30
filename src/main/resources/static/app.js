@@ -120,6 +120,17 @@ async function fetchAndPopulateMemberships(preferredId = null) {
     }
 }
 
+function redirectIfUnauthorized(response, message) {
+    if (!response) {
+        return false;
+    }
+    if (response.status === 401 || response.status === 403) {
+        promptLoginRedirect(message);
+        return true;
+    }
+    return false;
+}
+
 async function createMembership(event) {
     event.preventDefault();
     const input = document.getElementById('new-membership-name');
@@ -143,6 +154,9 @@ async function createMembership(event) {
             },
             body: JSON.stringify({name})
         });
+        if (redirectIfUnauthorized(response, 'Please log in to create memberships.')) {
+            return;
+        }
         if (!response.ok) {
             if (response.status === 409) {
                 alert('That membership already exists.');
@@ -305,6 +319,9 @@ async function handleVote(perkId, voteType) {
             method: 'POST'
         });
 
+        if (redirectIfUnauthorized(response, 'Please log in to vote on perks.')) {
+            return;
+        }
         if (!response.ok) {
             throw new Error(`Failed to ${voteType}`);
         }
@@ -355,6 +372,9 @@ async function handleDelete(perkId) {
             method: 'DELETE'
         });
 
+        if (redirectIfUnauthorized(response, 'Please log in to delete perks.')) {
+            return;
+        }
         if (!response.ok) {
             // Handle 404 Not Found or other server errors
             throw new Error(`Failed to delete perk (status ${response.status})`);
@@ -435,6 +455,9 @@ async function addPerk(e) {
             body: JSON.stringify(perk)
         });
 
+        if (redirectIfUnauthorized(response, 'Please log in to add perks.')) {
+            return;
+        }
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }

@@ -8,6 +8,12 @@
 </head>
 
 <body>
+    <header>
+        <span id="welcome"></span>
+        <a href="profile.html" id="profile-link" style="display:none;">Profile</a>
+        <a href="login.html" id="login-link">Login</a>
+        <button id="logout-btn" style="display:none;">Logout</button>
+    </header>
     <h1>Perk Manager</h1>
     <div class="container">
         <div class="left">
@@ -70,6 +76,13 @@
             <div id="perk-list-container"></div>
         </div>
     </div>
-    <script src="app.js"></script>
+    <script src="auth.js" defer></script>
+    <script defer>
+        (async () => {
+            // Redirect to login if there is no active session.
+            window.__prefetchedUser = await requireAuth();
+        })();
+    </script>
+    <script src="app.js" defer></script>
 </body>
 </html>

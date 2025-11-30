@@ -1,10 +1,3 @@
-/**
- * Global Navigation Logic
- * 1. Checks localStorage for cached user (Optimistic UI).
- * 2. Verifies session with backend (Source of Truth).
- * 3. Toggles UI elements (Login/Register vs Hello/Logout).
- */
-
 const UI = {
     authSection: document.getElementById('nav-auth-section'),
     guestSection: document.getElementById('nav-guest-section'),

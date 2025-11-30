@@ -47,7 +47,8 @@
             <div class="membership-create">
                 <label for="new-membership-name">Can't find the membership?</label>
                 <div class="membership-create-row">
-                    <input type="text" id="new-membership-name" name="new-membership-name" placeholder="New membership name">
+                    <input type="text" id="new-membership-name" name="new-membership-name"
+                           placeholder="New membership name">
                     <button type="button" id="add-membership-btn">Add Membership</button>
                 </div>
                 <small class="hint-text">New memberships appear immediately in the dropdown.</small>
@@ -64,7 +65,13 @@
     </div>
     <div class="right">
         <h2>Available Perks</h2>
-        <div class="perk-filters">
+
+        <div class="tabs-container">
+            <button id="tab-all" class="tab-btn active">All Perks</button>
+            <button id="tab-forme" class="tab-btn" style="display: none;">For Me</button>
+        </div>
+
+        <div class="perk-filters" id="perk-filters-container">
             <input
                     type="text"
                     id="perk-search-input"
@@ -78,6 +85,7 @@
                 <option value="leastPopular">Least popular</option>
             </select>
         </div>
+
         <div id="sort-sync-warning" class="sort-warning hidden">
             <span>Sorted list may be out of sync. Use "Sort by" to refresh.</span>
             <div class="sort-warning-actions">
@@ -85,15 +93,11 @@
                 <button type="button" id="sort-warning-suppress">Don't show again</button>
             </div>
         </div>
+
         <div id="perk-list-container"></div>
     </div>
 </div>
 <script src="auth.js" defer></script>
-<script defer>
-    (async () => {
-        await requireAuth();
-    })();
-</script>
 <script src="app.js" defer></script>
 </body>
 </html>

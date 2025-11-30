@@ -515,3 +515,36 @@ hr {
     color: #0f9b8e;
     transform: translateX(-3px);
 }
+
+/* --- Tab Styles --- */
+.tabs-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab-btn:hover {
+    color: #0c3f64;
+    background-color: #f1f5f9;
+}
+
+.tab-btn.active {
+    color: #0f9b8e;
+    border-bottom-color: #0f9b8e;
+    background-color: transparent;
+}

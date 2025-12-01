@@ -552,17 +552,17 @@ hr {
 /* --- Filter Section Styles --- */
 .perk-filters {
     display: flex;
-    gap: 10px; /* Space between search bar and dropdown */
+    gap: 10px;
     margin-bottom: 15px;
 }
 
 #perk-search-input {
-    flex-grow: 1; /* This forces the search bar to take up all remaining width */
-    min-width: 200px; /* Prevents it from getting too small on mobile */
+    flex-grow: 1;
+    min-width: 200px;
 }
 
 #perk-sort-select {
     width: auto;
-    min-width: 160px; /* Ensures the sort text doesn't get cut off */
+    min-width: 160px;
     cursor: pointer;
 }

@@ -186,7 +186,9 @@ function setViewMode(mode) {
 
 const SORT_OPTION_CONFIG = Object.freeze({
     mostPopular: {sortBy: 'score', direction: 'desc'},
-    leastPopular: {sortBy: 'score', direction: 'asc'}
+    leastPopular: {sortBy: 'score', direction: 'asc'},
+    expirySoonest: {sortBy: 'expirydate', direction: 'asc'},
+    expiryLatest: {sortBy: 'expirydate', direction: 'desc'}
 });
 
 let activeSortSnapshot = null;
@@ -233,6 +235,37 @@ function getPerkFilters(sortConfig = null) {
     return {search, sortBy, direction};
 }
 
+function applyClientSideSort(perks, sortBy, direction) {
+    if (!sortBy || !Array.isArray(perks)) return perks;
+
+    perks.sort((a, b) => {
+        if (sortBy === 'score') {
+            const sA = a.score || 0;
+            const sB = b.score || 0;
+            return direction === 'asc' ? sA - sB : sB - sA;
+        } else if (sortBy === 'expirydate') {
+            const tA = a.expiryDate ? new Date(a.expiryDate).getTime() : null;
+            const tB = b.expiryDate ? new Date(b.expiryDate).getTime() : null;
+
+            if (tA === tB) return 0;
+
+            if (direction === 'asc') {
+                // Soonest: Dates first, then Nulls (Infinity)
+                if (tA === null) return 1;
+                if (tB === null) return -1;
+                return tA - tB;
+            } else {
+                // Latest: Nulls first, then Dates (Latest -> Earliest)
+                if (tA === null) return -1;
+                if (tB === null) return 1;
+                return tB - tA;
+            }
+        }
+        return 0;
+    });
+    return perks;
+}
+
 async function fetchAndRenderPerks(options = {}) {
     const {
         preserveScrollPosition = false,
@@ -273,26 +306,25 @@ async function fetchAndRenderPerks(options = {}) {
                 );
             }
 
-            // 2b. CLIENT-SIDE SORTING (Mirrors Backend Logic)
-            if (sortBy === 'score') {
-                perks.sort((a, b) => {
-                    const sA = a.score || 0;
-                    const sB = b.score || 0;
-                    return direction === 'asc' ? sA - sB : sB - sA;
-                });
-            }
-
         } else {
-            // "ALL PERKS" - Server-side Filtering/Sorting
+            // "ALL PERKS"
             const params = new URLSearchParams();
             if (search) params.append('search', search);
-            if (sortBy) params.append('sortBy', sortBy);
-            if (direction) params.append('direction', direction);
+            if (sortBy && sortBy !== 'expirydate') {
+                params.append('sortBy', sortBy);
+                params.append('direction', direction);
+            }
 
             const url = '/api/perks' + (params.toString() ? `?${params.toString()}` : '');
             const response = await fetch(url);
             if (!response.ok) throw new Error('Network response was not ok');
             perks = await response.json();
+        }
+
+        // 2. CLIENT-SIDE SORTING
+        // Apply if we are in 'recommended' mode OR if the sort type is 'expirydate'
+        if (currentViewMode === 'recommended' || sortBy === 'expirydate') {
+            applyClientSideSort(perks, sortBy, direction);
         }
 
         // 3. RENDER

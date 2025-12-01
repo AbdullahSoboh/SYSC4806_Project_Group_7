@@ -3,9 +3,18 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f9f9f9;
+    margin: 0;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px;
     margin: 40px;
 }
 
+/* --- Auth Styles --- */
 .auth-body {
     margin: 0;
     min-height: 100vh;
@@ -189,13 +198,6 @@ h1 {
     margin-bottom: 30px;
 }
 
-.container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 40px;
-}
-
 /* Left side (form) */
 .left {
     flex: 1;
@@ -216,7 +218,7 @@ label {
     font-weight: bold;
 }
 
-input, button {
+input, button, select {
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -261,10 +263,6 @@ button:hover {
 /* Right side (list container) */
 .right {
     flex: 2;
-}
-
-.hidden {
-    display: none !important;
 }
 
 .sort-warning {
@@ -362,9 +360,6 @@ hr {
     color: #333;
 }
 
-.perk-details {
-}
-
 .upvote-btn {
     color: red;
 }
@@ -380,9 +375,176 @@ hr {
 
     color: #d9534f;
     font-size: 1.2rem;
+    border: none;
+    background: transparent;
 }
 
 .delete-btn:hover {
     color: #c9302c;
-    background-color: #e0e0e0;
+    background-color: #eee;
+}
+
+/* --- Global Navigation Bar --- */
+.global-nav {
+    background: linear-gradient(135deg, #0f9b8e, #0c3f64);
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.nav-links a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.nav-links a:hover {
+    color: #ffffff;
+}
+
+/* --- AUTHENTICATED STATE (Home, Profile, Logout) --- */
+#nav-auth-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-user-text {
+    font-weight: normal;
+    color: #e0f2f1;
+    margin-right: 5px;
+}
+
+#nav-auth-section a:not(#nav-logout) {
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: background 0.2s;
+}
+
+#nav-auth-section a:not(#nav-logout):hover {
+    background: rgba(255, 255, 255, 0.15);
+    text-decoration: none;
+}
+
+#nav-logout {
+    padding: 8px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    margin-left: 5px;
+}
+
+#nav-logout:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+    text-decoration: none;
+}
+
+
+/* --- GUEST STATE (Login, Register) --- */
+#nav-guest-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#nav-guest-section a[href="login.html"] {
+    padding: 8px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+}
+
+#nav-guest-section a[href="login.html"]:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+    text-decoration: none;
+}
+
+#nav-guest-section a[href="register.html"] {
+    background-color: #ffffff;
+    color: #0f9b8e;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 700;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#nav-guest-section a[href="register.html"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    color: #0c3f64;
+    text-decoration: none;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* --- Auth Back Link --- */
+.auth-back-link {
+    align-self: flex-start;
+    margin-bottom: 20px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.auth-back-link:hover {
+    color: #0f9b8e;
+    transform: translateX(-3px);
+}
+
+/* --- Tab Styles --- */
+.tabs-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab-btn:hover {
+    color: #0c3f64;
+    background-color: #f1f5f9;
+}
+
+.tab-btn.active {
+    color: #0f9b8e;
+    border-bottom-color: #0f9b8e;
+    background-color: transparent;
 }

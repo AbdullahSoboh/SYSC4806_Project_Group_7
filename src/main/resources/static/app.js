@@ -1,12 +1,13 @@
+let currentViewMode = 'all'; // 'all' | 'recommended'
+
 function getMembershipSelect() {
     return document.getElementById('membership');
 }
 
 function setMembershipSelectMessage(message) {
     const select = getMembershipSelect();
-    if (!select) {
-        return;
-    }
+    if (!select) return;
+
     select.innerHTML = '';
     const option = document.createElement('option');
     option.value = '';
@@ -20,9 +21,7 @@ function setMembershipSelectMessage(message) {
 
 function populateMembershipSelect(memberships, preferredId = null) {
     const select = getMembershipSelect();
-    if (!select) {
-        return;
-    }
+    if (!select) return;
 
     if (!Array.isArray(memberships) || memberships.length === 0) {
         setMembershipSelectMessage('No memberships available');
@@ -30,10 +29,10 @@ function populateMembershipSelect(memberships, preferredId = null) {
     }
 
     const previousValue = select.value;
-    const desiredValue =
-        preferredId !== null && preferredId !== undefined
-            ? String(preferredId)
-            : previousValue;
+    const desiredValue = preferredId !== null && preferredId !== undefined
+        ? String(preferredId)
+        : previousValue;
+
     select.innerHTML = '';
     select.disabled = false;
 
@@ -52,11 +51,8 @@ function populateMembershipSelect(memberships, preferredId = null) {
             select.appendChild(option);
         });
 
-    const hasDesiredSelection = memberships.some(
-        (membership) => String(membership.id) === desiredValue
-    );
+    const hasDesiredSelection = memberships.some(m => String(m.id) === desiredValue);
     placeholder.selected = !hasDesiredSelection;
-    placeholder.defaultSelected = !hasDesiredSelection;
     if (hasDesiredSelection) {
         select.value = desiredValue;
     } else {
@@ -65,9 +61,7 @@ function populateMembershipSelect(memberships, preferredId = null) {
 }
 
 function deriveMembershipsFromPerks(perks) {
-    if (!Array.isArray(perks)) {
-        return [];
-    }
+    if (!Array.isArray(perks)) return [];
     const map = new Map();
     perks.forEach((perk) => {
         const membership = perk?.membership;
@@ -84,9 +78,7 @@ function deriveMembershipsFromPerks(perks) {
 async function populateMembershipsFromPerks(preferredId = null) {
     try {
         const response = await fetch('/api/perks');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+        if (!response.ok) throw new Error('Network response was not ok');
         const perks = await response.json();
         const memberships = deriveMembershipsFromPerks(perks);
         if (memberships.length === 0) {
@@ -104,15 +96,13 @@ async function fetchAndPopulateMemberships(preferredId = null) {
     setMembershipSelectMessage('Loading memberships...');
     try {
         const response = await fetch('/api/memberships');
-        if (!response.ok) {
-            throw new Error(`Membership fetch failed with status ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Membership fetch failed: ${response.status}`);
         const memberships = await response.json();
         if (Array.isArray(memberships) && memberships.length > 0) {
             populateMembershipSelect(memberships, preferredId);
             return;
         }
-        console.warn('Membership endpoint returned no data; falling back to perks');
+        console.warn('Membership endpoint empty; falling back to perks');
         await populateMembershipsFromPerks(preferredId);
     } catch (error) {
         console.error('Error fetching memberships:', error);
@@ -121,9 +111,7 @@ async function fetchAndPopulateMemberships(preferredId = null) {
 }
 
 function redirectIfUnauthorized(response, message) {
-    if (!response) {
-        return false;
-    }
+    if (!response) return false;
     if (response.status === 401 || response.status === 403) {
         promptLoginRedirect(message);
         return true;
@@ -135,9 +123,7 @@ async function createMembership(event) {
     event.preventDefault();
     const input = document.getElementById('new-membership-name');
     const button = document.getElementById('add-membership-btn');
-    if (!input || !button) {
-        return;
-    }
+    if (!input || !button) return;
 
     const name = input.value.trim();
     if (!name) {
@@ -149,14 +135,11 @@ async function createMembership(event) {
     try {
         const response = await fetch('/api/memberships', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({name})
         });
-        if (redirectIfUnauthorized(response, 'Please log in to create memberships.')) {
-            return;
-        }
+        if (redirectIfUnauthorized(response, 'Please log in to create memberships.')) return;
+
         if (!response.ok) {
             if (response.status === 409) {
                 alert('That membership already exists.');
@@ -175,9 +158,35 @@ async function createMembership(event) {
     }
 }
 
+function setViewMode(mode) {
+    currentViewMode = mode;
+
+    // Update Tabs UI
+    const tabAll = document.getElementById('tab-all');
+    const tabForMe = document.getElementById('tab-forme');
+
+    // Toggle active classes
+    if (mode === 'recommended') {
+        tabAll.classList.remove('active');
+        tabForMe.classList.add('active');
+    } else {
+        tabForMe.classList.remove('active');
+        tabAll.classList.add('active');
+    }
+
+    // Clear existing list and reload
+    const container = document.getElementById('perk-list-container');
+    if (container) container.innerHTML = '';
+
+    // Reset sort snapshot when switching views to avoid confusion
+    clearSortSnapshot();
+
+    fetchAndRenderPerks();
+}
+
 const SORT_OPTION_CONFIG = Object.freeze({
-    mostPopular: { sortBy: 'score', direction: 'desc' },
-    leastPopular: { sortBy: 'score', direction: 'asc' }
+    mostPopular: {sortBy: 'score', direction: 'desc'},
+    leastPopular: {sortBy: 'score', direction: 'asc'}
 });
 
 let activeSortSnapshot = null;
@@ -185,27 +194,27 @@ let sortWarningElement = null;
 let suppressSortWarning = false;
 
 function showSortWarning() {
-    if (!sortWarningElement || suppressSortWarning) {
-        return;
-    }
+    if (!sortWarningElement || suppressSortWarning) return;
     sortWarningElement.classList.remove('hidden');
 }
 
 function hideSortWarning() {
-    if (!sortWarningElement) {
-        return;
-    }
+    if (!sortWarningElement) return;
     sortWarningElement.classList.add('hidden');
 }
 
 function resolveSortConfig(value) {
     return SORT_OPTION_CONFIG[value]
         ? {...SORT_OPTION_CONFIG[value]}
-        : { sortBy: null, direction: null };
+        : {sortBy: null, direction: null};
 }
 
 function markSortSnapshotActive(config) {
-    activeSortSnapshot = config ? {...config} : null;
+    if (config && config.sortBy) {
+        activeSortSnapshot = {...config};
+    } else {
+        activeSortSnapshot = null;
+    }
     hideSortWarning();
 }
 
@@ -218,10 +227,10 @@ function getPerkFilters(sortConfig = null) {
     const searchInput = document.getElementById('perk-search-input');
     const search = searchInput ? searchInput.value.trim() : '';
 
-    const sortBy = sortConfig?.sortBy ?? null;
-    const direction = sortConfig?.direction ?? null;
+    const sortBy = sortConfig?.sortBy ?? activeSortSnapshot?.sortBy ?? null;
+    const direction = sortConfig?.direction ?? activeSortSnapshot?.direction ?? null;
 
-    return { search, sortBy, direction };
+    return {search, sortBy, direction};
 }
 
 async function fetchAndRenderPerks(options = {}) {
@@ -229,43 +238,68 @@ async function fetchAndRenderPerks(options = {}) {
         preserveScrollPosition = false,
         sortConfig = null
     } = options;
+
     const perkListContainer = document.getElementById('perk-list-container');
-    if (!perkListContainer) {
-        return;
-    }
+    if (!perkListContainer) return;
+
     const previousScrollPosition = preserveScrollPosition ? window.scrollY : null;
-    const hasExistingContent = perkListContainer.children.length > 0;
-    const previousHeight = hasExistingContent ? perkListContainer.offsetHeight : null;
 
-    if (!hasExistingContent) {
+    if (perkListContainer.children.length === 0) {
         perkListContainer.textContent = 'Loading perks...';
-    } else if (previousHeight !== null) {
-        perkListContainer.style.minHeight = `${previousHeight}px`;
     }
+
     try {
-        const { search, sortBy, direction } = getPerkFilters(sortConfig);
+        let perks = [];
+        const {search, sortBy, direction} = getPerkFilters(sortConfig);
 
-        // Build query string
-        const params = new URLSearchParams();
-        if (search) {
-            params.append('search', search);
-        }
-        if (sortBy) {
-            params.append('sortBy', sortBy);
-        }
-        if (direction) {
-            params.append('direction', direction);
+        // 1. FETCH DATA
+        if (currentViewMode === 'recommended') {
+            const url = '/api/perks/recommended';
+            const response = await fetch(url);
+
+            if (response.status === 401 || response.status === 403) {
+                perkListContainer.innerHTML = `<p>Please <a href="login.html">log in</a> to view your recommended perks.</p>`;
+                return;
+            }
+            if (!response.ok) throw new Error('Network response was not ok');
+            perks = await response.json();
+
+            // 2a. CLIENT-SIDE FILTERING (Mirrors Backend Logic)
+            if (search) {
+                const lowerSearch = search.toLowerCase();
+                perks = perks.filter(p =>
+                    (p.title && p.title.toLowerCase().includes(lowerSearch)) ||
+                    (p.product && p.product.toLowerCase().includes(lowerSearch))
+                );
+            }
+
+            // 2b. CLIENT-SIDE SORTING (Mirrors Backend Logic)
+            if (sortBy === 'score') {
+                perks.sort((a, b) => {
+                    const sA = a.score || 0;
+                    const sB = b.score || 0;
+                    return direction === 'asc' ? sA - sB : sB - sA;
+                });
+            }
+
+        } else {
+            // "ALL PERKS" - Server-side Filtering/Sorting
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (sortBy) params.append('sortBy', sortBy);
+            if (direction) params.append('direction', direction);
+
+            const url = '/api/perks' + (params.toString() ? `?${params.toString()}` : '');
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network response was not ok');
+            perks = await response.json();
         }
 
-        const url = '/api/perks' + (params.toString() ? `?${params.toString()}` : '');
-        const response = await fetch(url); // fetch the perk data
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const perks = await response.json(); // parse JSON format
-
+        // 3. RENDER
         if (!Array.isArray(perks) || perks.length === 0) {
-            perkListContainer.textContent = 'No perks available.';
+            perkListContainer.textContent = currentViewMode === 'recommended'
+                ? 'No recommended perks found. Add memberships to your profile!'
+                : 'No perks available.';
             return;
         }
         perkListContainer.textContent = '';
@@ -295,36 +329,18 @@ async function fetchAndRenderPerks(options = {}) {
     } catch (error) {
         perkListContainer.textContent = 'Failed to load perks.';
         console.error('Error fetching perks:', error);
-        setMembershipSelectMessage('Unable to load memberships');
-    } finally {
-        if (perkListContainer) {
-            perkListContainer.style.minHeight = '';
-        }
     }
 }
 
-/**
- * Handles sending a vote request to the API and updating the UI.
- * @param {string} perkId - The ID of the perk to vote on.
- * @param {'upvote' | 'downvote'} voteType - The type of vote.
- */
 async function handleVote(perkId, voteType) {
     const button = document.querySelector(`.${voteType}-btn[data-id="${perkId}"]`);
-    if (button) {
-        button.disabled = true;
-    }
+    if (button) button.disabled = true;
 
     try {
-        const response = await fetch(`/api/perks/${perkId}/${voteType}`, {
-            method: 'POST'
-        });
+        const response = await fetch(`/api/perks/${perkId}/${voteType}`, {method: 'POST'});
 
-        if (redirectIfUnauthorized(response, 'Please log in to vote on perks.')) {
-            return;
-        }
-        if (!response.ok) {
-            throw new Error(`Failed to ${voteType}`);
-        }
+        if (redirectIfUnauthorized(response, 'Please log in to vote on perks.')) return;
+        if (!response.ok) throw new Error(`Failed to ${voteType}`);
 
         await response.json();
 
@@ -333,67 +349,42 @@ async function handleVote(perkId, voteType) {
             updatePerkScoreDisplay(perkId, voteType);
             showSortWarning();
         } else {
-            // Re-fetch the perk list using current search + sort
-            await fetchAndRenderPerks({ preserveScrollPosition: true });
+            // Re-fetch using current mode
+            await fetchAndRenderPerks({preserveScrollPosition: true});
         }
 
     } catch (error) {
         console.error(`Error ${voteType}ing:`, error);
         alert(`Failed to record ${voteType}.`);
     } finally {
-        if (button) {
-            button.disabled = false;
-        }
+        if (button) button.disabled = false;
     }
 }
 
 function updatePerkScoreDisplay(perkId, voteType) {
     const scoreElement = document.getElementById(`score-${perkId}`);
-    if (!scoreElement) {
-        return;
-    }
+    if (!scoreElement) return;
     const currentScore = Number(scoreElement.textContent) || 0;
     const delta = voteType === 'upvote' ? 1 : -1;
     scoreElement.textContent = String(currentScore + delta);
 }
 
-/**
- * Handles sending a delete request to the API.
- * @param {string} perkId - The ID of the perk to delete.
- */
 async function handleDelete(perkId) {
-    // Confirmation dialog before deleting
-    if (!confirm('Are you sure you want to delete this perk?')) {
-        return;
-    }
+    if (!confirm('Are you sure you want to delete this perk?')) return;
 
     try {
-        const response = await fetch(`/api/perks/${perkId}`, {
-            method: 'DELETE'
-        });
+        const response = await fetch(`/api/perks/${perkId}`, {method: 'DELETE'});
+        if (redirectIfUnauthorized(response, 'Please log in to delete perks.')) return;
+        if (!response.ok) throw new Error(`Failed to delete perk (status ${response.status})`);
 
-        if (redirectIfUnauthorized(response, 'Please log in to delete perks.')) {
-            return;
-        }
-        if (!response.ok) {
-            // Handle 404 Not Found or other server errors
-            throw new Error(`Failed to delete perk (status ${response.status})`);
-        }
-
-        // On success (204 No Content), remove the element from the DOM
         const perkElement = document.getElementById(`perk-item-${perkId}`);
-        if (perkElement) {
-            perkElement.remove();
-        }
-
+        if (perkElement) perkElement.remove();
     } catch (error) {
         console.error('Error deleting perk:', error);
         alert('Failed to delete perk.');
     }
 }
 
-
-//Test the POST
 async function addPerk(e) {
     e.preventDefault();
 
@@ -404,27 +395,17 @@ async function addPerk(e) {
         return;
     }
 
-    const membershipName =
-        membershipSelect.options[membershipSelect.selectedIndex]?.textContent ?? null;
+    const membershipName = membershipSelect.options[membershipSelect.selectedIndex]?.textContent ?? null;
     const membershipIdNumber = Number(membershipId);
-    if (Number.isNaN(membershipIdNumber)) {
-        alert('Invalid membership selection.');
-        return;
-    }
 
     const expiryDateValue = document.getElementById('expiryDate').value;
-
     if (expiryDateValue) {
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to local midnight
-
-        // Parse YYYY-MM-DD string
+        today.setHours(0, 0, 0, 0);
         const [year, month, day] = expiryDateValue.split('-').map(Number);
-        // Create date as local midnight (month is 0-indexed)
         const localInputDate = new Date(year, month - 1, day);
-
         if (localInputDate < today) {
-            alert('Expiry date cannot be in the past. Please select today or a future date.');
+            alert('Expiry date cannot be in the past.');
             return;
         }
     }
@@ -441,30 +422,24 @@ async function addPerk(e) {
         },
     };
 
-    if (!perk.title || !perk.description || !perk.product || !perk.membership) {
-        alert('Please fill in all required fields.');
-        return;
-    }
-
     try {
         const response = await fetch('/api/perks', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(perk)
         });
 
-        if (redirectIfUnauthorized(response, 'Please log in to add perks.')) {
-            return;
-        }
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+        if (redirectIfUnauthorized(response, 'Please log in to add perks.')) return;
+        if (!response.ok) throw new Error('Network response was not ok');
 
         document.getElementById('new-perk-form').reset();
-        clearSortSnapshot();
-        await fetchAndRenderPerks(); // Refresh the perk list (also refreshes memberships)
+
+        // If we added a perk, we probably want to see "All Perks" to confirm it's there
+        if (currentViewMode !== 'all') {
+            setViewMode('all');
+        } else {
+            await fetchAndRenderPerks();
+        }
     } catch (error) {
         console.error('Error adding perk:', error);
         alert('Failed to add perk.');
@@ -473,8 +448,20 @@ async function addPerk(e) {
 
 document.addEventListener("DOMContentLoaded", () => {
     fetchAndPopulateMemberships();
-    clearSortSnapshot();
     fetchAndRenderPerks();
+
+    // Check auth for tab visibility
+    const user = localStorage.getItem('perk_user');
+    if (user) {
+        const tabForMe = document.getElementById('tab-forme');
+        if (tabForMe) tabForMe.style.display = 'block';
+    }
+
+    // Tab Listeners
+    const tabAll = document.getElementById('tab-all');
+    const tabForMe = document.getElementById('tab-forme');
+    if (tabAll) tabAll.addEventListener('click', () => setViewMode('all'));
+    if (tabForMe) tabForMe.addEventListener('click', () => setViewMode('recommended'));
 
     sortWarningElement = document.getElementById('sort-sync-warning');
     const sortWarningDismissButton = document.getElementById('sort-warning-dismiss');
@@ -490,46 +477,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const form = document.getElementById("new-perk-form");
-    if (form) {
-        form.addEventListener("submit", addPerk);
-    }
+    if (form) form.addEventListener("submit", addPerk);
 
     const addMembershipButton = document.getElementById('add-membership-btn');
-    if (addMembershipButton) {
-        addMembershipButton.addEventListener('click', createMembership);
-    }
+    if (addMembershipButton) addMembershipButton.addEventListener('click', createMembership);
 
     const perkListContainer = document.getElementById('perk-list-container');
     if (perkListContainer) {
         perkListContainer.addEventListener('click', (event) => {
             const target = event.target;
             const perkId = target.dataset.id;
+            if (!perkId) return;
 
-            if (!perkId) {
-                return;
-            }
-
-            if (target.classList.contains('upvote-btn')) {
-                handleVote(perkId, 'upvote');
-            } else if (target.classList.contains('downvote-btn')) {
-                handleVote(perkId, 'downvote');
-            } else if (target.classList.contains('delete-btn')) {
-                handleDelete(perkId);
-            }
+            if (target.classList.contains('upvote-btn')) handleVote(perkId, 'upvote');
+            else if (target.classList.contains('downvote-btn')) handleVote(perkId, 'downvote');
+            else if (target.classList.contains('delete-btn')) handleDelete(perkId);
         });
     }
+
     const searchInput = document.getElementById('perk-search-input');
-        if (searchInput) {
-            let searchTimeoutId;
-            searchInput.addEventListener('input', () => {
-                // small debounce so we don't spam the API on every keystroke
-                clearTimeout(searchTimeoutId);
-                searchTimeoutId = setTimeout(() => {
-                    clearSortSnapshot();
-                    fetchAndRenderPerks();
-                }, 300);
-            });
-        }
+    if (searchInput) {
+        let searchTimeoutId;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeoutId);
+            searchTimeoutId = setTimeout(() => {
+                fetchAndRenderPerks();
+            }, 300);
+        });
+    }
 
     const sortSelect = document.getElementById('perk-sort-select');
     if (sortSelect) {
@@ -538,14 +513,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!sortValue) {
                 clearSortSnapshot();
                 sortSelect.selectedIndex = 0;
-                await fetchAndRenderPerks({ preserveScrollPosition: true });
+                await fetchAndRenderPerks({preserveScrollPosition: true});
                 return;
             }
 
             const sortConfig = resolveSortConfig(sortValue);
-            await fetchAndRenderPerks({ sortConfig, preserveScrollPosition: true });
+            await fetchAndRenderPerks({sortConfig, preserveScrollPosition: true});
             markSortSnapshotActive(sortConfig);
-            sortSelect.selectedIndex = 0; // visually reset to placeholder
+            sortSelect.selectedIndex = 0;
         });
     }
 });

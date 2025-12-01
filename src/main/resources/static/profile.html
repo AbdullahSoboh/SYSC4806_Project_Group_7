@@ -3,47 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <title>Profile - Perk Manager</title>
+    <link rel="stylesheet" href="style.css">
     <script src="auth.js" defer></script>
 </head>
 <body>
 
-<h1>Profile</h1>
+<nav class="global-nav">
+    <a href="index.html" class="nav-brand">Perk Manager</a>
 
-<p id="profile-message">Loading...</p>
+    <div class="nav-links">
+        <div id="nav-auth-section" class="hidden">
+            <span id="nav-username" class="nav-user-text"></span>
+            <a href="index.html">Home</a>
+            <a href="profile.html">Profile</a>
+            <a href="#" id="nav-logout">Logout</a>
+        </div>
 
-<h2>Your memberships</h2>
-<div id="membership-list"></div>
+        <div id="nav-guest-section">
+            <a href="login.html">Login</a>
+            <a href="register.html">Register</a>
+        </div>
+    </div>
+</nav>
 
-<button id="save-btn">Save</button>
+<div class="container" style="display:block; max-width: 600px; margin: 40px auto;">
+    <h1>Profile</h1>
+
+    <p id="profile-message">Loading...</p>
+
+    <h2>Your memberships</h2>
+    <div id="membership-list"></div>
+
+    <button id="save-btn" class="btn-primary" style="margin-top:20px;">Save Changes</button>
+</div>
 
 <script>
     async function loadProfile() {
+        const user = await checkAuth();
+        if (!user) {
+            return;
+        }
+
         const messageEl = document.getElementById("profile-message");
         const listEl = document.getElementById("membership-list");
 
         try {
-            // get current user with memberships
-            const userRes = await fetch("/api/current-user");
-            if (!userRes.ok) {
-                if (userRes.status === 401 || userRes.status === 403) {
-                    promptLoginRedirect("Please log in to view your profile.");
-                } else {
-                    messageEl.textContent = "Unable to load your profile right now.";
-                }
-                return;
-            }
-            const user = await userRes.json();
             const userMemberships = user.memberships || [];
             const userMembershipIds = userMemberships.map(m => m.id);
 
-            // gell all available memberships
             const memRes = await fetch("/api/memberships");
             if (!memRes.ok) {
-                if (memRes.status === 401 || memRes.status === 403) {
-                    promptLoginRedirect("Please log in to view your profile.");
-                } else {
-                    messageEl.textContent = "Failed to load memberships.";
-                }
+                messageEl.textContent = "Failed to load memberships.";
                 return;
             }
             const memberships = await memRes.json();
@@ -59,11 +69,13 @@
 
             memberships.forEach(m => {
                 const wrapper = document.createElement("div");
+                wrapper.style.padding = "5px 0";
 
                 const cb = document.createElement("input");
                 cb.type = "checkbox";
                 cb.className = "membership-checkbox";
                 cb.dataset.id = m.id;
+                cb.style.marginRight = "10px";
                 if (userMembershipIds.includes(m.id)) {
                     cb.checked = true;
                 }
@@ -94,14 +106,16 @@
         try {
             const res = await fetch("/api/user/memberships", {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ membershipIds: selectedIds })
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({membershipIds: selectedIds})
             });
 
             if (res.ok) {
+                const updatedUser = await res.json();
+                localStorage.setItem('perk_user', JSON.stringify(updatedUser));
                 alert("Memberships saved.");
             } else if (res.status === 401 || res.status === 403) {
-                promptLoginRedirect("Please log in to update your memberships.");
+                alert("Please log in to update your memberships.");
             } else {
                 alert("Failed to save memberships.");
             }
@@ -117,7 +131,7 @@
     }
 
     // Load on page open
-    loadProfile();
+    document.addEventListener("DOMContentLoaded", loadProfile);
 </script>
 
 </body>

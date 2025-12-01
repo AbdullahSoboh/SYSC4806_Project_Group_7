@@ -8,81 +8,96 @@
 </head>
 
 <body>
-    <header>
-        <span id="welcome"></span>
-        <a href="profile.html" id="profile-link" style="display:none;">Profile</a>
-        <a href="login.html" id="login-link">Login</a>
-        <button id="logout-btn" style="display:none;">Logout</button>
-    </header>
-    <h1>Perk Manager</h1>
-    <div class="container">
-        <div class="left">
-            <h2> Add a New Perk here</h2>
-            <form id="new-perk-form">
-                <label for="title">Perk Name:</label>
-                <input type="text" id="title" name="title" placeholder="e.g., 10% off movies" required>
+<nav class="global-nav">
+    <a href="index.html" class="nav-brand">Perk Manager</a>
 
-                <label for="description">Description:</label>
-                <input type="text" id="description" name="description" placeholder="Short Description" required>
-
-                <label for="product">Product:</label>
-                <input type="text" id="product" name="product" placeholder="e.g., Movies" required>
-
-                <label for="membership">Membership:</label>
-                <select id="membership" name="membership" required>
-                    <option value="">Loading memberships...</option>
-                </select>
-
-                <div class="membership-create">
-                    <label for="new-membership-name">Can't find the membership?</label>
-                    <div class="membership-create-row">
-                        <input type="text" id="new-membership-name" name="new-membership-name" placeholder="New membership name">
-                        <button type="button" id="add-membership-btn">Add Membership</button>
-                    </div>
-                    <small class="hint-text">New memberships appear immediately in the dropdown.</small>
-                </div>
-
-                <label for="location">Location (optional):</label>
-                <input type="text" id="location" name="location" placeholder="e.g., Ottawa; leave empty for Global">
-
-                <label for="expiryDate">Expiry Date (optional):</label>
-                <input type="date" id="expiryDate" name="expiryDate">
-
-                <button type="submit" id="submit-btn">Add Perk</button>
-            </form>
+    <div class="nav-links">
+        <div id="nav-auth-section" class="hidden">
+            <span id="nav-username" class="nav-user-text"></span>
+            <a href="index.html">Home</a>
+            <a href="profile.html">Profile</a>
+            <a href="#" id="nav-logout">Logout</a>
         </div>
-        <div class="right">
-            <h2>Available Perks</h2>
-            <div class="perk-filters">
-                <input
-                        type="text"
-                        id="perk-search-input"
-                        placeholder="Search perks by title or product..."
-                />
 
-                <select id="perk-sort-select">
-                    <option value="">Sort by</option>
-                    <option value="mostPopular">Most popular</option>
-                    <option value="leastPopular">Least popular</option>
-                </select>
-            </div>
-            <div id="sort-sync-warning" class="sort-warning hidden">
-                <span>Sorted list may be out of sync. Use "Sort by" to refresh.</span>
-                <div class="sort-warning-actions">
-                    <button type="button" id="sort-warning-dismiss">Acknowledge</button>
-                    <button type="button" id="sort-warning-suppress">Don't show again</button>
-                </div>
-            </div>
-            <div id="perk-list-container"></div>
+        <div id="nav-guest-section">
+            <a href="login.html">Login</a>
+            <a href="register.html">Register</a>
         </div>
     </div>
-    <script src="auth.js" defer></script>
-    <script defer>
-        (async () => {
-            // Redirect to login if there is no active session.
-            window.__prefetchedUser = await requireAuth();
-        })();
-    </script>
-    <script src="app.js" defer></script>
+</nav>
+
+<div class="container">
+    <div class="left">
+        <h2> Add a New Perk here</h2>
+        <form id="new-perk-form">
+            <label for="title">Perk Name:</label>
+            <input type="text" id="title" name="title" placeholder="e.g., 10% off movies" required>
+
+            <label for="description">Description:</label>
+            <input type="text" id="description" name="description" placeholder="Short Description" required>
+
+            <label for="product">Product:</label>
+            <input type="text" id="product" name="product" placeholder="e.g., Movies" required>
+
+            <label for="membership">Membership:</label>
+            <select id="membership" name="membership" required>
+                <option value="">Loading memberships...</option>
+            </select>
+
+            <div class="membership-create">
+                <label for="new-membership-name">Can't find the membership?</label>
+                <div class="membership-create-row">
+                    <input type="text" id="new-membership-name" name="new-membership-name"
+                           placeholder="New membership name">
+                    <button type="button" id="add-membership-btn">Add Membership</button>
+                </div>
+                <small class="hint-text">New memberships appear immediately in the dropdown.</small>
+            </div>
+
+            <label for="location">Location (optional):</label>
+            <input type="text" id="location" name="location" placeholder="e.g., Ottawa; leave empty for Global">
+
+            <label for="expiryDate">Expiry Date (optional):</label>
+            <input type="date" id="expiryDate" name="expiryDate">
+
+            <button type="submit" id="submit-btn">Add Perk</button>
+        </form>
+    </div>
+    <div class="right">
+        <h2>Available Perks</h2>
+
+        <div class="tabs-container">
+            <button id="tab-all" class="tab-btn active">All Perks</button>
+            <button id="tab-forme" class="tab-btn" style="display: none;">For Me</button>
+        </div>
+
+        <div class="perk-filters" id="perk-filters-container">
+            <input
+                    type="text"
+                    id="perk-search-input"
+                    placeholder="Search perks by title or product..."
+                    aria-label="Search perks by title or product"
+            >
+
+            <select id="perk-sort-select" aria-label="Sort perks">
+                <option value="">Sort by</option>
+                <option value="mostPopular">Most popular</option>
+                <option value="leastPopular">Least popular</option>
+            </select>
+        </div>
+
+        <div id="sort-sync-warning" class="sort-warning hidden">
+            <span>Sorted list may be out of sync. Use "Sort by" to refresh.</span>
+            <div class="sort-warning-actions">
+                <button type="button" id="sort-warning-dismiss">Acknowledge</button>
+                <button type="button" id="sort-warning-suppress">Don't show again</button>
+            </div>
+        </div>
+
+        <div id="perk-list-container"></div>
+    </div>
+</div>
+<script src="auth.js" defer></script>
+<script src="app.js" defer></script>
 </body>
 </html>

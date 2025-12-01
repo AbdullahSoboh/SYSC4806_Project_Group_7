@@ -9,6 +9,10 @@
 <body class="auth-body">
 <div class="auth-wrapper">
     <section class="auth-card">
+        <a href="index.html" class="auth-back-link">
+            <span>&larr;</span> Back to Home
+        </a>
+
         <div class="auth-badge">Perk Manager</div>
         <h1 class="auth-title">Welcome back</h1>
         <p class="auth-subtitle">Please log in to continue or create an account to start exploring perks.</p>
@@ -18,7 +22,8 @@
             <input id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
 
             <label for="password">Password</label>
-            <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+            <input id="password" name="password" type="password" placeholder="Enter your password"
+                   autocomplete="current-password" required>
 
             <button type="submit" id="login-submit" class="btn-primary">Sign in</button>
         </form>
@@ -49,7 +54,6 @@
 
     function resolveNext(nextValue) {
         if (!nextValue) return "index.html";
-        // Prevent open redirects: only allow relative paths within the app
         if (nextValue.startsWith("http://") || nextValue.startsWith("https://")) {
             return "index.html";
         }
@@ -66,7 +70,7 @@
         try {
             const res = await fetch("/api/login", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 credentials: "include",
                 body: JSON.stringify({
                     username: usernameInput.value.trim(),
@@ -75,6 +79,8 @@
             });
 
             if (res.ok) {
+                const user = await res.json();
+                localStorage.setItem('perk_user', JSON.stringify(user));
                 window.location.href = nextDestination || "index.html";
             } else {
                 errorEl.textContent = "Invalid username or password. Please try again.";
@@ -87,16 +93,16 @@
         }
     });
 
-    // If redirected here because auth was required, surface a friendly prompt.
     if (nextParam) {
         errorEl.textContent = "Please log in to continue.";
     }
 
-    // If already logged in (session cookie present), skip straight to app.
     (async () => {
         try {
-            const res = await fetch("/api/current-user", { credentials: "include" });
+            const res = await fetch("/api/current-user", {credentials: "include"});
             if (res.ok) {
+                const user = await res.json();
+                localStorage.setItem('perk_user', JSON.stringify(user));
                 window.location.href = nextDestination || "index.html";
             }
         } catch (err) {

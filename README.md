@@ -107,6 +107,16 @@ Votes are stored and returned immediately.
 
 
 Used by frontend dropdowns and filtering logic.
+
+- User & Authentication API
+  POST /login
+  POST /logout
+  POST /register
+  GET /api/current-user
+  PUT /api/user/memberships
+
+- Recommendations
+  GET /api/perks/recommended
 ## Notes:
 
 id is ignored if provided (server auto-generates).
@@ -159,7 +169,7 @@ PerkTest → unit tests for the model logic
 
 PerkManagerApplicationTests → verifies Spring context loads
 
-## Team Contributions
+## Milestone 2 Team Contributions
 
 Abdullah Soboh – Team Lead & Backend Features
 
@@ -204,6 +214,41 @@ Qusai Abdulrahman – Frontend Search, Filter, and UX
 - Connected frontend filters to the backend via updated fetchAndRenderPerks() with event listeners for live updates.
 - Ensured sorting (including popularity) works correctly end-to-end.
 
+## Milestone 3 Team Contributions
+
+Abdullah Soboh – Owner & Authentication Lead
+
+- Implemented the Authentication system including AuthController (#72) for login sessions.
+- Finalized Security "Lite" enhancement (#73) using WebMvcConfigurer interceptor.
+- Revamped the UI for the login page (#79).
+- Managed Azure deployment and final integration testing.
+
+Moesa Malik – Backend & Data Logic
+
+- Implemented the User entity and updated DataLoader with comprehensive test data (Issues #75, #76).
+- Created UserRepository and CommandLineRunner for pre-loading users and memberships.
+- Conducted code reviews and ensured quality assurance for the final demo.
+
+Imann Brar – Backend & Documentation
+
+- Implemented `GET /api/perks/recommended` endpoint and membership-based filtering (Issues #77, #78).
+- Updated Database Schema (Issue #86) and UML Class Diagram (Issue #85) to reflect final architecture.
+- Updated README (Issue #84) with latest project details and contributions.
+
+Tommy Csete – Frontend & UI/UX
+
+- Implemented global navigation bar with dynamic guest/user views (Issue #81).
+- Added "All Perks" and "For Me" tabs to home page (Issue #82).
+- Implemented logic to recommend perks based on user profile.
+- Conducted final CSS sweep and UI improvements (Issue #83).
+
+Qusai Abdulrahman – Frontend Authentication & Profile
+
+- Implemented login, register, and logout flows with backend integration (Issues #79, #80).
+- Built the `profile.html` page for managing user memberships.
+- Added backend support for saving/loading user memberships (`PUT /api/user/memberships`, `GET /api/current-user`).
+- Implemented UI logic for authentication state and navigation.
+
 
 ## Project Structure
 
@@ -211,27 +256,50 @@ src/
 ├─ main/java/ca/carleton/s4806/perkmanager/
 │  ├─ PerkManagerApplication.java
 │  ├─ DataLoader.java
+│  ├─ config/
+│  │   ├─ AuthInterceptor.java
+│  │   └─ WebConfig.java
 │  ├─ controller/
+│  │   ├─ AuthController.java
+│  │   ├─ MembershipController.java
 │  │   ├─ PerkController.java
-│  │   └─ MembershipController.java
+│  │   └─ UserMembershipController.java
 │  ├─ model/
+│  │   ├─ LoginRequest.java
+│  │   ├─ Membership.java
 │  │   ├─ Perk.java
-│  │   └─ Membership.java
+│  │   ├─ RegisterRequest.java
+│  │   └─ User.java
 │  └─ repository/
+│      ├─ MembershipRepository.java
 │      ├─ PerkRepository.java
-│      └─ MembershipRepository.java
+│      └─ UserRepository.java
 │
 ├─ main/resources/
 │  ├─ application.properties
 │  └─ static/
+│      ├─ app.js
+│      ├─ auth.js
 │      ├─ index.html
-│      ├─ style.css
-│      └─ app.js
+│      ├─ login.html
+│      ├─ profile.html
+│      ├─ register.html
+│      └─ style.css
 │
 └─ test/java/ca/carleton/s4806/perkmanager/
-├─ controller/PerkControllerTest.java
-├─ model/PerkTest.java
-└─ PerkManagerApplicationTests.java
+    ├─ PerkManagerApplicationTests.java
+    ├─ config/
+    │   └─ AuthInterceptorTest.java
+    ├─ controller/
+    │   ├─ AuthControllerTest.java
+    │   └─ PerkControllerTest.java
+    ├─ model/
+    │   ├─ PerkTest.java
+    │   └─ UserTest.java
+    └─ repository/
+        ├─ MembershipRepositoryTest.java
+        ├─ PerkRepositoryTest.java
+        └─ UserRepositoryTest.java
 
 docker-compose.yml  
 prometheus.yml  

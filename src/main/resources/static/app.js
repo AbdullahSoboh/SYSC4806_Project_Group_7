@@ -186,7 +186,9 @@ function setViewMode(mode) {
 
 const SORT_OPTION_CONFIG = Object.freeze({
     mostPopular: {sortBy: 'score', direction: 'desc'},
-    leastPopular: {sortBy: 'score', direction: 'asc'}
+    leastPopular: {sortBy: 'score', direction: 'asc'},
+    expirySoonest: {sortBy: 'expirydate', direction: 'asc'},
+    expiryLatest: {sortBy: 'expirydate', direction: 'desc'}
 });
 
 let activeSortSnapshot = null;
@@ -279,6 +281,17 @@ async function fetchAndRenderPerks(options = {}) {
                     const sA = a.score || 0;
                     const sB = b.score || 0;
                     return direction === 'asc' ? sA - sB : sB - sA;
+                });
+            } else if (sortBy === 'expirydate') {
+                perks.sort((a, b) => {
+                    const tA = a.expiryDate ? new Date(a.expiryDate).getTime() : null;
+                    const tB = b.expiryDate ? new Date(b.expiryDate).getTime() : null;
+
+                    if (tA === tB) return 0;
+                    if (tA === null) return 1;
+                    if (tB === null) return -1;
+
+                    return direction === 'asc' ? tA - tB : tB - tA;
                 });
             }
 

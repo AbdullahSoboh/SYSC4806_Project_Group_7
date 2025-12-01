@@ -82,3 +82,16 @@ async function requireAuth(redirectTo = "login.html") {
     }
     return user;
 }
+
+function promptLoginRedirect(message = "Please log in to continue.", options = {}) {
+    const {next = null, redirectTo = "login.html"} = options;
+    if (message) {
+        alert(message);
+    }
+    localStorage.removeItem('perk_user');
+
+    const url = new URL(redirectTo, window.location.href);
+    const nextValue = next ?? (window.location.pathname + window.location.search);
+    url.searchParams.set("next", nextValue);
+    window.location.href = url.toString();
+}
